@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  expert-contacts:
+    build: .
+    container_name: expert-contacts-microservice
+    ports:
+      - "3600:3600"
+    environment:
+      - NODE_ENV=production
+      - PORT=3600
+      - DATABASE_PATH=/app/data/expert_contacts.db
+      - LOG_LEVEL=info
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+    networks:
+      - expert-network
+
+  # Optional: Add Redis for caching (future enhancement)
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: expert-contacts-redis
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis-data:/data
+  #   networks:
+  #     - expert-network
+
+networks:
+  expert-network:
+    driver: bridge
+
+volumes:
+  # redis-data:
