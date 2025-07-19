@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expert Contacts Microservice Test UI</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .config-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        
+        input[type="text"],
+        input[type="url"],
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #2980b9;
+        }
+        
+        button:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        
+        .section h2 {
+            color: #34495e;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+        }
+        
+        .results {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .error {
+            background: #fee;
+            color: #c00;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        
+        .success {
+            background: #efe;
+            color: #060;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        
+        .expert-card {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .expert-name {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 18px;
+        }
+        
+        .expert-title {
+            color: #7f8c8d;
+            margin: 5px 0;
+        }
+        
+        .expert-score {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            color: #7f8c8d;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            color: #3498db;
+            border-bottom-color: #3498db;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 Expert Contacts Microservice Test UI</h1>
+        
+        <div class="config-section">
+            <h3>Configuration</h3>
+            <div class="form-group">
+                <label for="apiUrl">API Base URL:</label>
+                <input type="url" id="apiUrl" value="http://localhost:3600" />
+            </div>
+            <div class="form-group">
+                <label for="apiKey">API Key:</label>
+                <input type="text" id="apiKey" value="test-secret" />
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('health')">Health Check</button>
+            <button class="tab" onclick="showTab('source')">Source Experts</button>
+            <button class="tab" onclick="showTab('search')">Search Experts</button>
+            <button class="tab" onclick="showTab('requests')">My Requests</button>
+        </div>
+
+        <!-- Health Check Tab -->
+        <div id="health" class="tab-content active">
+            <div class="section">
+                <h2>Health Check</h2>
+                <p>Check if the microservice is running and healthy.</p>
+                <button onclick="checkHealth()">Check Health</button>
+                <div id="healthResults"></div>
+            </div>
+        </div>
+
+        <!-- Source Experts Tab -->
+        <div id="source" class="tab-content">
+            <div class="section">
+                <h2>Source Experts</h2>
+                <div class="form-group">
+                    <label for="projectDescription">Project Description:</label>
+                    <textarea id="projectDescription" placeholder="Describe your project in detail...">I want to build an AI-powered healthcare platform for remote patient monitoring using wearable devices. The platform should analyze real-time health data, provide predictive insights, and alert healthcare providers of anomalies.</textarea>
+                </div>
+                <button onclick="sourceExperts()" id="sourceBtn">Source Experts</button>
+                <div id="sourceResults"></div>
+            </div>
+        </div>
+
+        <!-- Search Experts Tab -->
+        <div id="search" class="tab-content">
+            <div class="section">
+                <h2>Search Experts</h2>
+                <div class="form-group">
+                    <label for="searchQuery">Search Query:</label>
+                    <input type="text" id="searchQuery" placeholder="Search for experts..." />
+                </div>
+                <div class="form-group">
+                    <label for="minConfidence">Minimum Confidence Score:</label>
+                    <input type="number" id="minConfidence" min="0" max="10" step="0.5" placeholder="0-10" />
+                </div>
+                <button onclick="searchExperts()">Search</button>
+                <div id="searchResults"></div>
+            </div>
+        </div>
+
+        <!-- My Requests Tab -->
+        <div id="requests" class="tab-content">
+            <div class="section">
+                <h2>My Expert Sourcing Requests</h2>
+                <button onclick="getMyRequests()">Get My Requests</button>
+                <div id="requestsResults"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const getConfig = () => ({
+            apiUrl: document.getElementById('apiUrl').value,
+            apiKey: document.getElementById('apiKey').value
+        });
+
+        // Tab switching
+        function showTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        // API Helper
+        async function apiCall(endpoint, options = {}) {
+            const config = getConfig();
+            const url = `${config.apiUrl}${endpoint}`;
+            
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers
+            };
+            
+            if (config.apiKey && !endpoint.includes('/health')) {
+                headers['X-API-Key'] = config.apiKey;
+            }
+            
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    headers
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || data.error || 'API Error');
+                }
+                
+                return data;
+            } catch (error) {
+                throw error;
+            }
+        }
+
+        // Health Check
+        async function checkHealth() {
+            const resultsDiv = document.getElementById('healthResults');
+            resultsDiv.innerHTML = '<div class="loading">Checking health...</div>';
+            
+            try {
+                const data = await apiCall('/health');
+                resultsDiv.innerHTML = `
+                    <div class="success">✅ Service is healthy!</div>
+                    <div class="results">${JSON.stringify(data, null, 2)}</div>
+                `;
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        // Source Experts
+        async function sourceExperts() {
+            const resultsDiv = document.getElementById('sourceResults');
+            const projectDescription = document.getElementById('projectDescription').value;
+            const sourceBtn = document.getElementById('sourceBtn');
+            
+            if (!projectDescription || projectDescription.length < 10) {
+                resultsDiv.innerHTML = '<div class="error">Please provide a detailed project description (at least 10 characters)</div>';
+                return;
+            }
+            
+            sourceBtn.disabled = true;
+            resultsDiv.innerHTML = '<div class="loading">🔍 Sourcing experts... This may take a moment...</div>';
+            
+            try {
+                const data = await apiCall('/api/v1/experts/source', {
+                    method: 'POST',
+                    body: JSON.stringify({ projectDescription })
+                });
+                
+                let html = '<div class="success">✅ Expert sourcing completed!</div>';
+                html += `<h3>Request ID: ${data.data.requestId}</h3>`;
+                
+                // Display expert types
+                html += '<h4>Expert Types Identified:</h4>';
+                data.data.expertTypes.forEach(type => {
+                    html += `
+                        <div class="expert-card">
+                            <div class="expert-name">${type.type}</div>
+                            <div class="expert-title">${type.description}</div>
+                            <span class="expert-score">Importance: ${type.importance}/10</span>
+                            <div>Skills: ${type.skills.join(', ')}</div>
+                        </div>
+                    `;
+                });
+                
+                // Display found experts
+                if (data.data.results && data.data.results.length > 0) {
+                    html += '<h4>Experts Found:</h4>';
+                    data.data.results.forEach(result => {
+                        html += `<h5>${result.expertType} (${result.experts.length} experts)</h5>`;
+                        result.experts.forEach(expert => {
+                            html += `
+                                <div class="expert-card">
+                                    <div class="expert-name">${expert.name}</div>
+                                    <div class="expert-title">${expert.title} at ${expert.company}</div>
+                                    <span class="expert-score">Score: ${expert.combinedScore.toFixed(0)}</span>
+                                    <span class="expert-score">Relevance: ${expert.relevancyScore}/10</span>
+                                    <span class="expert-score">Response Likelihood: ${expert.likelihoodToRespond}/10</span>
+                                    <div style="margin-top: 10px;">
+                                        <a href="${expert.linkedinUrl}" target="_blank">LinkedIn Profile</a>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    });
+                }
+                
+                resultsDiv.innerHTML = html;
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            } finally {
+                sourceBtn.disabled = false;
+            }
+        }
+
+        // Search Experts
+        async function searchExperts() {
+            const resultsDiv = document.getElementById('searchResults');
+            const query = document.getElementById('searchQuery').value;
+            const minConfidence = document.getElementById('minConfidence').value;
+            
+            resultsDiv.innerHTML = '<div class="loading">Searching...</div>';
+            
+            try {
+                const params = new URLSearchParams();
+                if (query) params.append('query', query);
+                if (minConfidence) params.append('minConfidence', minConfidence);
+                
+                const data = await apiCall(`/api/v1/experts/search?${params}`);
+                
+                if (data.data.length === 0) {
+                    resultsDiv.innerHTML = '<div class="error">No experts found</div>';
+                    return;
+                }
+                
+                let html = `<div class="success">Found ${data.count} experts</div>`;
+                data.data.forEach(expert => {
+                    html += `
+                        <div class="expert-card">
+                            <div class="expert-name">${expert.name}</div>
+                            <div class="expert-title">${expert.title} at ${expert.company}</div>
+                            <span class="expert-score">Confidence: ${expert.confidence_score}/10</span>
+                            <div>Expertise: ${expert.expertise_areas.join(', ')}</div>
+                            <div style="margin-top: 10px;">
+                                <a href="${expert.linkedin_url}" target="_blank">LinkedIn Profile</a>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                resultsDiv.innerHTML = html;
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        // Get My Requests
+        async function getMyRequests() {
+            const resultsDiv = document.getElementById('requestsResults');
+            resultsDiv.innerHTML = '<div class="loading">Loading requests...</div>';
+            
+            try {
+                const data = await apiCall('/api/v1/requests');
+                
+                if (data.data.length === 0) {
+                    resultsDiv.innerHTML = '<div class="error">No requests found</div>';
+                    return;
+                }
+                
+                let html = `<div class="success">Found ${data.count} requests</div>`;
+                for (const request of data.data) {
+                    html += `
+                        <div class="expert-card">
+                            <div class="expert-name">Request #${request.id}</div>
+                            <div>Status: <span class="expert-score">${request.status}</span></div>
+                            <div>Created: ${new Date(request.created_at).toLocaleString()}</div>
+                            <div style="margin-top: 10px;">
+                                <em>${request.project_description.substring(0, 200)}...</em>
+                            </div>
+                            <button onclick="getRequestDetails(${request.id})" style="margin-top: 10px;">
+                                View Details
+                            </button>
+                        </div>
+                    `;
+                }
+                
+                resultsDiv.innerHTML = html;
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        // Get Request Details
+        async function getRequestDetails(requestId) {
+            const resultsDiv = document.getElementById('requestsResults');
+            
+            try {
+                const data = await apiCall(`/api/v1/requests/${requestId}`);
+                
+                let html = `<button onclick="getMyRequests()">← Back to Requests</button>`;
+                html += `<h3>Request #${data.data.id} Details</h3>`;
+                html += `<div class="results">${JSON.stringify(data.data, null, 2)}</div>`;
+                
+                resultsDiv.innerHTML = html;
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        // Initialize with health check
+        window.onload = () => {
+            checkHealth();
+        };
+    </script>
+</body>
+</html>

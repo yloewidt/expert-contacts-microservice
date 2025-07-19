@@ -7,7 +7,10 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "NODE_ENV=development node src/server.js",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=puppeteer",
+    "test:e2e": "NODE_OPTIONS=--experimental-vm-modules jest tests/puppeteer.test.js",
+    "test:e2e:headed": "HEADLESS=false npm run test:e2e",
+    "test:all": "npm test && npm run test:e2e",
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
     "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
     "lint": "eslint src tests",
@@ -36,6 +39,7 @@
     "eslint": "^8.56.0",
     "prettier": "^3.2.4",
     "pino-pretty": "^10.3.1",
+    "puppeteer": "^24.0.0",
     "@types/express": "^4.17.21",
     "@types/jest": "^29.5.11"
   },
