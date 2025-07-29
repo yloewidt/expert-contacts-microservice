@@ -1,0 +1,90 @@
+main:
+  params: [args]
+  steps:
+    - init:
+        assign:
+          - requestId: ${args.request_id}
+          - projectDescription: ${args.project_description}
+          - serviceUrl: ${sys.get_env("CLOUD_RUN_SERVICE_URL")}
+          
+    - updateStatusProcessing:
+        call: http.post
+        args:
+          url: ${serviceUrl + "/internal/update-status"}
+          body:
+            request_id: ${requestId}
+            status: "processing"
+          auth:
+            type: OIDC
+            
+    - generateExpertTypes:
+        call: http.post
+        args:
+          url: ${serviceUrl + "/internal/generate-expert-types"}
+          body:
+            project_description: ${projectDescription}
+          auth:
+            type: OIDC
+        result: expertTypesResponse
+        
+    - generateSearchPrompts:
+        call: parallel_for
+        args:
+          shared: [serviceUrl, projectDescription]
+          concurrency_limit: 5
+          values: ${expertTypesResponse.body.expert_types}
+          body:
+            call: http.post
+            args:
+              url: ${serviceUrl + "/internal/generate-search-prompt"}
+              body:
+                project_description: ${projectDescription}
+                expert_type: ${value}
+              auth:
+                type: OIDC
+            result: promptResult
+        result: searchPrompts
+        
+    - executeSearches:
+        call: parallel_for
+        args:
+          shared: [serviceUrl]
+          concurrency_limit: 3
+          values: ${searchPrompts}
+          body:
+            call: http.post
+            args:
+              url: ${serviceUrl + "/internal/search-experts"}
+              body:
+                search_prompt: ${value.body.search_prompt}
+              auth:
+                type: OIDC
+              timeout: 300  # 5 minutes timeout for each search
+            result: searchResult
+        result: searchResults
+        
+    - aggregateResults:
+        call: http.post
+        args:
+          url: ${serviceUrl + "/internal/aggregate-results"}
+          body:
+            request_id: ${requestId}
+            expert_types: ${expertTypesResponse.body.expert_types}
+            search_prompts: ${searchPrompts}
+            search_results: ${searchResults}
+          auth:
+            type: OIDC
+        result: aggregationResult
+        
+    - updateStatusCompleted:
+        call: http.post
+        args:
+          url: ${serviceUrl + "/internal/update-status"}
+          body:
+            request_id: ${requestId}
+            status: "completed"
+          auth:
+            type: OIDC
+            
+    - return:
+        return: ${aggregationResult.body}
