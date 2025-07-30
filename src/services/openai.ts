@@ -27,13 +27,22 @@ export class OpenAIService {
       logger.info('Starting generateExpertTypes');
       const systemPrompt = `I am looking for experts to help me validate a topic. Based on the project description, what specific types of experts should I target? For each type, provide a title, a reason ("why") they are relevant, and assign an importance score from 0.0 to 1.0 for each expert type.
       
-      Return your response as a JSON object with an "expert_types" array:
+      Provide 3-5 different expert types that would be valuable for this project.
+      
+      Return your response as a JSON object with an "expert_types" array containing multiple expert objects:
       {
-        "expert_types": [{
-          "expert_title": "string",
-          "why": "string",
-          "importance_score": 0.9
-        }]
+        "expert_types": [
+          {
+            "expert_title": "string",
+            "why": "string", 
+            "importance_score": 0.9
+          },
+          {
+            "expert_title": "string",
+            "why": "string",
+            "importance_score": 0.8
+          }
+        ]
       }`;
 
       const response = await this.client.chat.completions.create({
@@ -50,17 +59,29 @@ export class OpenAIService {
       if (!content) throw new Error('No content in response');
 
       const result = JSON.parse(content);
-      logger.info({ expertTypes: result }, 'Generated expert types');
+      logger.info({ 
+        rawResult: result,
+        isArray: Array.isArray(result),
+        hasExpertTypes: !!result.expert_types,
+        keys: Object.keys(result)
+      }, 'Parsed OpenAI response');
       
       // Ensure the result is an array
       const expertTypes = Array.isArray(result) ? result : (result.expert_types || result.experts || []);
       
       // Validate and fix field names
-      return expertTypes.map((type: any) => ({
+      const mappedTypes = expertTypes.map((type: any) => ({
         expert_title: type.expert_title || type.title,
         why: type.why || type.reason,
         importance_score: type.importance_score || type.importance || 0.5
       }));
+      
+      logger.info({ 
+        expertTypesCount: mappedTypes.length,
+        expertTypes: mappedTypes 
+      }, 'Returning expert types');
+      
+      return mappedTypes;
     } catch (error) {
       logger.error({ error }, 'Error generating expert types');
       throw error;
