@@ -1,6 +1,6 @@
 import { pool } from '../config/database';
 import { v4 as uuidv4 } from 'uuid';
-import { Expert, ExpertType, SearchCandidate } from '../types';
+import { Expert, ExpertType, SearchCandidate, LLMMetrics } from '../types';
 
 export class Database {
   async createSourcingRequest(projectDescription: string): Promise<string> {
@@ -274,5 +274,74 @@ export class Database {
       JSON.stringify(matchData.areas_of_expertise || []),
       JSON.stringify(matchData.conversation_topics || [])
     ]);
+  }
+
+  // LLM Call Tracking Methods
+  async createLLMCall(requestId: string, model: string, operation: string): Promise<string> {
+    const id = uuidv4();
+    const query = `
+      INSERT INTO llm_calls (id, request_id, model, operation, started_at, status)
+      VALUES ($1, $2, $3, $4, NOW(), 'in_progress')
+      RETURNING id, started_at
+    `;
+    
+    const result = await pool.query(query, [id, requestId, model, operation]);
+    return result.rows[0].id;
+  }
+
+  async updateLLMCall(
+    callId: string, 
+    status: 'success' | 'failed' | 'timeout',
+    duration_ms: number,
+    error_message?: string,
+    tokens_used?: { prompt_tokens: number; completion_tokens: number; total_tokens: number }
+  ): Promise<void> {
+    const query = `
+      UPDATE llm_calls 
+      SET 
+        completed_at = NOW(),
+        duration_ms = $2,
+        status = $3,
+        error_message = $4,
+        tokens_used = $5
+      WHERE id = $1
+    `;
+    
+    await pool.query(query, [
+      callId,
+      duration_ms,
+      status,
+      error_message || null,
+      tokens_used ? JSON.stringify(tokens_used) : null
+    ]);
+  }
+
+  async incrementLLMCallAttempt(requestId: string, model: string, operation: string): Promise<{ id: string; attempt_number: number }> {
+    // Get the current max attempt number for this operation
+    const maxAttemptQuery = `
+      SELECT COALESCE(MAX(attempt_number), 0) as max_attempt
+      FROM llm_calls
+      WHERE request_id = $1 AND model = $2 AND operation = $3
+    `;
+    
+    const maxResult = await pool.query(maxAttemptQuery, [requestId, model, operation]);
+    const nextAttempt = maxResult.rows[0].max_attempt + 1;
+    
+    // Create new call with incremented attempt number
+    const id = uuidv4();
+    const insertQuery = `
+      INSERT INTO llm_calls (id, request_id, model, operation, started_at, status, attempt_number)
+      VALUES ($1, $2, $3, $4, NOW(), 'in_progress', $5)
+      RETURNING id
+    `;
+    
+    const result = await pool.query(insertQuery, [id, requestId, model, operation, nextAttempt]);
+    return { id: result.rows[0].id, attempt_number: nextAttempt };
+  }
+
+  async getLLMMetrics(requestId: string): Promise<LLMMetrics | null> {
+    const query = `SELECT calculate_llm_metrics($1) as metrics`;
+    const result = await pool.query(query, [requestId]);
+    return result.rows[0].metrics;
   }
 }

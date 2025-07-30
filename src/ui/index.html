@@ -313,6 +313,72 @@
             color: #9ca3af;
             text-decoration: none;
         }
+        
+        .llm-metrics {
+            background-color: #F3F4F6;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .metric-card {
+            background-color: white;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .metric-label {
+            font-size: 12px;
+            color: #6B7280;
+            margin-bottom: 5px;
+        }
+        
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1F2937;
+        }
+        
+        .metrics-table {
+            width: 100%;
+            background-color: white;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .metrics-table th,
+        .metrics-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #E5E7EB;
+        }
+        
+        .metrics-table th {
+            background-color: #F9FAFB;
+            font-weight: 600;
+            font-size: 12px;
+            color: #6B7280;
+            text-transform: uppercase;
+        }
+        
+        .metrics-table td {
+            font-size: 14px;
+            color: #1F2937;
+        }
+        
+        .metrics-table tr:last-child td {
+            border-bottom: none;
+        }
     </style>
 </head>
 <body>
@@ -595,6 +661,68 @@
                             <div>
                                 <strong>Experts Found:</strong> {experts.length}
                             </div>
+                        </div>
+                    )}
+                    
+                    {job.llm_metrics && (
+                        <div className="llm-metrics">
+                            <h3 style={{ marginTop: '20px', marginBottom: '15px' }}>LLM Call Metrics</h3>
+                            <div className="metrics-grid">
+                                <div className="metric-card">
+                                    <div className="metric-label">Total LLM Calls</div>
+                                    <div className="metric-value">{job.llm_metrics.total_calls}</div>
+                                </div>
+                                <div className="metric-card">
+                                    <div className="metric-label">Success Rate</div>
+                                    <div className="metric-value">
+                                        {Math.round((job.llm_metrics.successful_calls / job.llm_metrics.total_calls) * 100)}%
+                                    </div>
+                                </div>
+                                <div className="metric-card">
+                                    <div className="metric-label">Failed/Timeout</div>
+                                    <div className="metric-value">
+                                        {job.llm_metrics.failed_calls} / {job.llm_metrics.timeout_calls}
+                                    </div>
+                                </div>
+                                <div className="metric-card">
+                                    <div className="metric-label">Total Retries</div>
+                                    <div className="metric-value">{job.llm_metrics.total_retries}</div>
+                                </div>
+                                <div className="metric-card">
+                                    <div className="metric-label">Avg Response Time</div>
+                                    <div className="metric-value">
+                                        {(job.llm_metrics.avg_duration_ms / 1000).toFixed(1)}s
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {job.llm_metrics.by_operation && (
+                                <div className="operation-metrics">
+                                    <h4 style={{ marginTop: '15px', marginBottom: '10px' }}>By Operation</h4>
+                                    <table className="metrics-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Operation</th>
+                                                <th>Calls</th>
+                                                <th>Success Rate</th>
+                                                <th>Avg Time</th>
+                                                <th>Retries</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {Object.entries(job.llm_metrics.by_operation).map(([op, stats]) => (
+                                                <tr key={op}>
+                                                    <td>{op.replace(/_/g, ' ')}</td>
+                                                    <td>{stats.calls}</td>
+                                                    <td>{stats.success_rate}%</td>
+                                                    <td>{(stats.avg_duration_ms / 1000).toFixed(1)}s</td>
+                                                    <td>{stats.retries}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
                         </div>
                     )}
                     

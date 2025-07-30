@@ -85,6 +85,7 @@ router.get('/api/v1/source/:id', async (req: Request, res: Response): Promise<Re
     if (request.status === 'completed') {
       const experts = await db.getExpertsByRequestId(id);
       const rawOutputs = await db.getRawOutputs(id);
+      const llmMetrics = await db.getLLMMetrics(id);
       
       const processingTime = request.completed_at 
         ? (new Date(request.completed_at).getTime() - new Date(request.created_at).getTime()) / 1000
@@ -98,6 +99,10 @@ router.get('/api/v1/source/:id', async (req: Request, res: Response): Promise<Re
       
       if (rawOutputs) {
         response.raw_outputs = rawOutputs;
+      }
+      
+      if (llmMetrics) {
+        response.llm_metrics = llmMetrics;
       }
     }
 

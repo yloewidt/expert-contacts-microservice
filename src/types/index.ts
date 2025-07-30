@@ -51,4 +51,49 @@ export interface SourcingResponse {
     search_results: SearchCandidate[][];
   };
   message?: string;
+  llm_metrics?: LLMMetrics;
+}
+
+export interface LLMCall {
+  id: string;
+  request_id: string;
+  model: string;
+  operation: string;
+  started_at: string;
+  completed_at?: string;
+  duration_ms?: number;
+  status: 'in_progress' | 'success' | 'failed' | 'timeout';
+  attempt_number: number;
+  error_message?: string;
+  tokens_used?: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
+}
+
+export interface LLMMetrics {
+  total_calls: number;
+  successful_calls: number;
+  failed_calls: number;
+  timeout_calls: number;
+  total_duration_ms: number;
+  avg_duration_ms: number;
+  total_retries: number;
+  by_model: {
+    [model: string]: {
+      calls: number;
+      success_rate: number;
+      avg_duration_ms: number;
+      total_tokens: number;
+    };
+  };
+  by_operation: {
+    [operation: string]: {
+      calls: number;
+      success_rate: number;
+      avg_duration_ms: number;
+      retries: number;
+    };
+  };
 }

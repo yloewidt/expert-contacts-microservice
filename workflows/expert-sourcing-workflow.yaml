@@ -23,6 +23,7 @@ main:
           url: ${serviceUrl + "/internal/generate-expert-types"}
           body:
             project_description: ${projectDescription}
+            request_id: ${requestId}
           auth:
             type: OIDC
           timeout: 60
@@ -45,6 +46,7 @@ main:
                   body:
                     project_description: ${projectDescription}
                     expert_type: ${expertType}
+                    request_id: ${requestId}
                   auth:
                     type: OIDC
                   timeout: 60
@@ -73,6 +75,7 @@ main:
                       url: ${serviceUrl + "/internal/search-experts"}
                       body:
                         search_prompt: ${searchPrompt}
+                        request_id: ${requestId}
                       auth:
                         type: OIDC
                       timeout: 300

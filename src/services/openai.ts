@@ -1,11 +1,16 @@
 import OpenAI from 'openai';
 import { logger } from '../config/logger';
 import { ExpertType, SearchCandidate } from '../types';
+import { Database } from '../models/database';
 
 export class OpenAIService {
   private client: OpenAI;
+  private db: Database;
+  private requestId?: string;
 
-  constructor() {
+  constructor(requestId?: string) {
+    this.db = new Database();
+    this.requestId = requestId;
     const apiKey = process.env.OPENAI_API_KEY?.trim();
     if (!apiKey) {
       logger.error('OPENAI_API_KEY is not set');
@@ -24,8 +29,16 @@ export class OpenAIService {
   }
 
   async generateExpertTypes(projectDescription: string): Promise<ExpertType[]> {
+    const startTime = Date.now();
+    let llmCallId: string | undefined;
+    
     try {
       logger.info('Starting generateExpertTypes');
+      
+      // Track LLM call if requestId is available
+      if (this.requestId) {
+        llmCallId = await this.db.createLLMCall(this.requestId, 'gpt-4o', 'generate_expert_types');
+      }
       const systemPrompt = `You are an elite expert type identification system for project validation. Your task is to identify hyper-specific expert types that would provide the most valuable insights for validating a given project.
 
 Based on the project description, identify distinct expert types. For each expert type, you must provide:
@@ -122,15 +135,44 @@ Focus on experts who have:
         expertTypes: mappedTypes 
       }, 'Returning expert types');
       
+      // Track success
+      if (llmCallId && this.requestId) {
+        const duration = Date.now() - startTime;
+        const usage = response.usage;
+        await this.db.updateLLMCall(llmCallId, 'success', duration, undefined, 
+          usage ? {
+            prompt_tokens: usage.prompt_tokens,
+            completion_tokens: usage.completion_tokens,
+            total_tokens: usage.total_tokens
+          } : undefined
+        );
+      }
+      
       return mappedTypes;
     } catch (error) {
       logger.error({ error }, 'Error generating expert types');
+      
+      // Track failure
+      if (llmCallId && this.requestId) {
+        const duration = Date.now() - startTime;
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        await this.db.updateLLMCall(llmCallId, 'failed', duration, errorMessage);
+      }
+      
       throw error;
     }
   }
 
   async generateSearchPrompt(projectDescription: string, expertType: ExpertType): Promise<string> {
+    const startTime = Date.now();
+    let llmCallId: string | undefined;
+    
     try {
+      // Track LLM call if requestId is available
+      if (this.requestId) {
+        llmCallId = await this.db.createLLMCall(this.requestId, 'gpt-4o', 'generate_search_prompt');
+      }
+      
       const userPrompt = `I'm looking to validate the following project:\n${projectDescription}\nTo do this, I'm looking for an expert like a ${expertType.expert_title} because ${expertType.why}.\nHelp me write a search prompt based on this need, using the provided template.
 
 Fill in the template below by replacing the [[PLACEHOLDERS]] with specific, relevant information based on the project and expert type:
@@ -187,9 +229,30 @@ VALIIDATE LINKEDIN LINK.
       const content = response.choices[0].message.content;
       if (!content) throw new Error('No content in response');
 
+      // Track success
+      if (llmCallId && this.requestId) {
+        const duration = Date.now() - startTime;
+        const usage = response.usage;
+        await this.db.updateLLMCall(llmCallId, 'success', duration, undefined, 
+          usage ? {
+            prompt_tokens: usage.prompt_tokens,
+            completion_tokens: usage.completion_tokens,
+            total_tokens: usage.total_tokens
+          } : undefined
+        );
+      }
+
       return content;
     } catch (error) {
       logger.error({ error }, 'Error generating search prompt');
+      
+      // Track failure
+      if (llmCallId && this.requestId) {
+        const duration = Date.now() - startTime;
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        await this.db.updateLLMCall(llmCallId, 'failed', duration, errorMessage);
+      }
+      
       throw error;
     }
   }
@@ -200,7 +263,15 @@ VALIIDATE LINKEDIN LINK.
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       logger.info({ searchPrompt, attempt, maxRetries }, 'Starting expert search with o3');
       
+      const startTime = Date.now();
+      let llmCallId: string | undefined;
+      
       try {
+        // Track LLM call with attempt number
+        if (this.requestId) {
+          const callInfo = await this.db.incrementLLMCallAttempt(this.requestId, 'o3', 'search_experts');
+          llmCallId = callInfo.id;
+        }
         const response = await (this.client as any).responses.create({
           model: "o3",
           input: [
@@ -317,11 +388,36 @@ VALIIDATE LINKEDIN LINK.
           usage: response.usage
         }, 'Successfully found expert candidates');
         
+        // Track success
+        if (llmCallId && this.requestId) {
+          const duration = Date.now() - startTime;
+          const usage = response.usage;
+          await this.db.updateLLMCall(llmCallId, 'success', duration, undefined,
+            usage ? {
+              prompt_tokens: usage.prompt_tokens || 0,
+              completion_tokens: usage.completion_tokens || 0,
+              total_tokens: usage.total_tokens || 0
+            } : undefined
+          );
+        }
+        
         return candidates;
         
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         logger.error({ error: errorMessage, attempt }, 'Expert search attempt failed');
+        
+        // Track failure or timeout
+        if (llmCallId && this.requestId) {
+          const duration = Date.now() - startTime;
+          const isTimeout = errorMessage.toLowerCase().includes('timeout') || duration >= 300000;
+          await this.db.updateLLMCall(
+            llmCallId, 
+            isTimeout ? 'timeout' : 'failed', 
+            duration, 
+            errorMessage
+          );
+        }
         
         if (attempt === maxRetries) {
           logger.error({ error }, 'All expert search attempts failed');

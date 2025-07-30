@@ -42,7 +42,8 @@ router.post('/internal/generate-expert-types', async (req: Request, res: Respons
       return res.status(400).json({ error: 'Missing project_description' });
     }
     
-    const openai = new OpenAIService();
+    const { request_id } = req.body;
+    const openai = new OpenAIService(request_id);
     const expertTypes = await openai.generateExpertTypes(project_description);
     return res.json({ expert_types: expertTypes });
   } catch (error) {
@@ -60,7 +61,8 @@ router.post('/internal/generate-search-prompt', async (req: Request, res: Respon
       return res.status(400).json({ error: 'Missing required fields' });
     }
     
-    const openai = new OpenAIService();
+    const { request_id } = req.body;
+    const openai = new OpenAIService(request_id);
     const searchPrompt = await openai.generateSearchPrompt(project_description, expert_type);
     return res.json({ search_prompt: searchPrompt });
   } catch (error) {
@@ -78,7 +80,8 @@ router.post('/internal/search-experts', async (req: Request, res: Response): Pro
       return res.status(400).json({ error: 'Missing search_prompt' });
     }
     
-    const openai = new OpenAIService();
+    const { request_id } = req.body;
+    const openai = new OpenAIService(request_id);
     const candidates = await openai.searchExperts(search_prompt);
     return res.json({ candidates });
   } catch (error) {
