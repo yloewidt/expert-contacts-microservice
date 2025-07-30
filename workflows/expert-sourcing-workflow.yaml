@@ -5,7 +5,7 @@ main:
         assign:
           - requestId: ${args.request_id}
           - projectDescription: ${args.project_description}
-          - serviceUrl: ${sys.get_env("CLOUD_RUN_SERVICE_URL")}
+          - serviceUrl: "https://expert-contacts-service-1045570267679.us-central1.run.app"
           
     - updateStatusProcessing:
         call: http.post

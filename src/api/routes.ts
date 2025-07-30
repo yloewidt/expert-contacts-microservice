@@ -2,12 +2,12 @@ import { Router, Request, Response } from 'express';
 import Joi from 'joi';
 import { logger } from '../config/logger';
 import { Database } from '../models/database';
-// import { CloudTasksService } from '../services/cloudTasks';
+import { CloudTasksService } from '../services/cloudTasks';
 import { ExpertSourcingRequest, SourcingResponse } from '../types';
 
 const router = Router();
 const db = new Database();
-// const cloudTasks = new CloudTasksService();
+const cloudTasks = new CloudTasksService();
 
 // Validation schema
 const sourcingRequestSchema = Joi.object({
@@ -34,8 +34,6 @@ router.post('/api/v1/source', async (req: Request, res: Response): Promise<Respo
     logger.info({ request_id: requestId }, 'Expert sourcing request created');
 
     // Create Cloud Task to trigger Cloud Workflow
-    // TODO: Enable this once workflow is properly configured
-    /*
     try {
       await cloudTasks.createWorkflowTask(requestId, project_description);
     } catch (error) {
@@ -44,7 +42,6 @@ router.post('/api/v1/source', async (req: Request, res: Response): Promise<Respo
       await db.updateRequestStatus(requestId, 'failed');
       throw error;
     }
-    */
 
     // Return immediate response
     const response: SourcingResponse = {
