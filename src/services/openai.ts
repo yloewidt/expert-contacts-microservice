@@ -151,7 +151,7 @@ and have PROOF of thought-leadership (articles, talks, open-source tools).
 - Published in the last 3 years on [[TOPIC THEY SHOULD BE EXPERT ON]]
 - [[DEMONSTRATED HANDS ON EXPERIENCE RELEVANT TO THE TOPIC]]
 
-3. For EACH candidate, return a JSON object with: name, title, company, linkedin_url, email, matching_reasons (as an array of strings), relevancy_to_type_score (a number from 0.0 to 1.0 indicating how well they match this specific expert type), responsiveness, and a personalised_message.
+3. For EACH candidate, return a JSON object with: name, title, company, linkedin_url, email, matching_reasons (as an array of strings), relevancy_to_type_score (a number from 0.0 to 1.0 indicating how well they match this specific expert type), responsiveness, personalised_message, areas_of_expertise (array of 3-5 specific technical/domain areas they are expert in), and conversation_topics (array of 3-5 specific topics we should discuss with them based on our project needs).
 
 ### CONSTRAINTS
 - Individuals only (no brokerages or consulting firms).
@@ -241,9 +241,21 @@ VALIIDATE LINKEDIN LINK.
                           type: "string",
                           enum: ["High", "Medium", "Low"]
                         },
-                        personalised_message: { type: "string" }
+                        personalised_message: { type: "string" },
+                        areas_of_expertise: {
+                          type: "array",
+                          items: { type: "string" },
+                          minItems: 3,
+                          maxItems: 5
+                        },
+                        conversation_topics: {
+                          type: "array",
+                          items: { type: "string" },
+                          minItems: 3,
+                          maxItems: 5
+                        }
                       },
-                      required: ["name", "title", "company", "linkedin_url", "email", "matching_reasons", "relevancy_to_type_score", "responsiveness", "personalised_message"],
+                      required: ["name", "title", "company", "linkedin_url", "email", "matching_reasons", "relevancy_to_type_score", "responsiveness", "personalised_message", "areas_of_expertise", "conversation_topics"],
                       additionalProperties: false
                     }
                   }
@@ -302,7 +314,11 @@ VALIIDATE LINKEDIN LINK.
           candidate.matching_reasons.length >= 2 &&
           typeof candidate.relevancy_to_type_score === 'number' &&
           candidate.responsiveness &&
-          candidate.personalised_message
+          candidate.personalised_message &&
+          Array.isArray(candidate.areas_of_expertise) &&
+          candidate.areas_of_expertise.length >= 3 &&
+          Array.isArray(candidate.conversation_topics) &&
+          candidate.conversation_topics.length >= 3
         );
         
         if (validCandidates.length === 0 && attempt < maxRetries) {

@@ -97,8 +97,8 @@ export class Database {
         const matchId = uuidv4();
         const matchQuery = `
           INSERT INTO expert_request_matches 
-          (id, request_id, expert_id, relevance_score, email, matching_reasons, personalised_message)
-          VALUES ($1, $2, $3, $4, $5, $6, $7)
+          (id, request_id, expert_id, relevance_score, email, matching_reasons, personalised_message, areas_of_expertise, conversation_topics)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         `;
         
         await client.query(matchQuery, [
@@ -108,7 +108,9 @@ export class Database {
           expert.relevance_score,
           expert.email,
           JSON.stringify(expert.matching_reasons),
-          expert.personalised_message
+          expert.personalised_message,
+          JSON.stringify(expert.areas_of_expertise || []),
+          JSON.stringify(expert.conversation_topics || [])
         ]);
       }
       
@@ -132,7 +134,9 @@ export class Database {
         erm.email,
         erm.relevance_score,
         erm.matching_reasons,
-        erm.personalised_message
+        erm.personalised_message,
+        erm.areas_of_expertise,
+        erm.conversation_topics
       FROM expert_request_matches erm
       JOIN experts e ON erm.expert_id = e.id
       WHERE erm.request_id = $1
@@ -150,7 +154,9 @@ export class Database {
       email: row.email,
       relevance_score: row.relevance_score,
       matching_reasons: JSON.parse(row.matching_reasons),
-      personalised_message: row.personalised_message
+      personalised_message: row.personalised_message,
+      areas_of_expertise: JSON.parse(row.areas_of_expertise || '[]'),
+      conversation_topics: JSON.parse(row.conversation_topics || '[]')
     }));
   }
 
@@ -253,8 +259,8 @@ export class Database {
     const id = uuidv4();
     const query = `
       INSERT INTO expert_request_matches 
-      (id, request_id, expert_id, relevance_score, email, matching_reasons, personalised_message, created_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP)
+      (id, request_id, expert_id, relevance_score, email, matching_reasons, personalised_message, areas_of_expertise, conversation_topics, created_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP)
     `;
     
     await pool.query(query, [
@@ -264,7 +270,9 @@ export class Database {
       matchData.relevancy_score || matchData.relevance_score,
       matchData.email || null,
       JSON.stringify(matchData.matching_reasons || []),
-      matchData.suggested_message || matchData.personalised_message || ''
+      matchData.suggested_message || matchData.personalised_message || '',
+      JSON.stringify(matchData.areas_of_expertise || []),
+      JSON.stringify(matchData.conversation_topics || [])
     ]);
   }
 }

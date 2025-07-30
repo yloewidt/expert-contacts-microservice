@@ -204,6 +204,80 @@
             font-weight: bold;
         }
         
+        .expert-expertise {
+            margin-top: 15px;
+        }
+        
+        .expert-expertise h4 {
+            font-size: 14px;
+            color: #4b5563;
+            margin-bottom: 8px;
+        }
+        
+        .expertise-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        .expertise-tag {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .expert-topics {
+            margin-top: 15px;
+        }
+        
+        .expert-topics h4 {
+            font-size: 14px;
+            color: #4b5563;
+            margin-bottom: 8px;
+        }
+        
+        .expert-topics ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .expert-topics li {
+            padding: 6px 0;
+            padding-left: 20px;
+            position: relative;
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .expert-topics li:before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: #3b82f6;
+        }
+        
+        .expert-actions {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .source-link {
+            color: #3b82f6;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .source-link:hover {
+            text-decoration: underline;
+        }
+        
         .loading {
             text-align: center;
             padding: 40px;
@@ -556,6 +630,39 @@
                                             <li key={idx}>{reason}</li>
                                         ))}
                                     </ul>
+                                </div>
+                                
+                                {expert.areas_of_expertise && expert.areas_of_expertise.length > 0 && (
+                                    <div className="expert-expertise">
+                                        <h4>Areas of Expertise:</h4>
+                                        <div className="expertise-tags">
+                                            {expert.areas_of_expertise.map((area, idx) => (
+                                                <span key={idx} className="expertise-tag">{area}</span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {expert.conversation_topics && expert.conversation_topics.length > 0 && (
+                                    <div className="expert-topics">
+                                        <h4>Discussion Topics:</h4>
+                                        <ul>
+                                            {expert.conversation_topics.map((topic, idx) => (
+                                                <li key={idx}>{topic}</li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
+                                
+                                <div className="expert-actions">
+                                    <a 
+                                        href={`/api/v1/source/${jobDetails.request_id}`} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="source-link"
+                                    >
+                                        View API Response
+                                    </a>
                                 </div>
                             </div>
                         ))}

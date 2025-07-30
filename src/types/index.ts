@@ -12,6 +12,8 @@ export interface Expert {
   relevance_score: number;
   matching_reasons: string[];
   personalised_message: string;
+  areas_of_expertise: string[];
+  conversation_topics: string[];
 }
 
 export interface ExpertType {
@@ -30,6 +32,8 @@ export interface SearchCandidate {
   relevancy_to_type_score: number;
   responsiveness: 'High' | 'Medium' | 'Low';
   personalised_message: string;
+  areas_of_expertise: string[];
+  conversation_topics: string[];
 }
 
 export interface SourcingResponse {

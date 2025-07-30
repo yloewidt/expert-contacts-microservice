@@ -1,0 +1,25 @@
+# Test parallel execution in Cloud Workflows
+main:
+  params: [args]
+  steps:
+    - init:
+        assign:
+          - searchPrompts: ["prompt1", "prompt2", "prompt3"]
+          - serviceUrl: "https://example.com"
+          
+    # Option 1: Using parallel step
+    - executeSearchesParallel:
+        parallel:
+          for:
+            value: searchPrompt
+            index: i
+            in: ${searchPrompts}
+            steps:
+              - callSearch:
+                  call: http.post
+                  args:
+                    url: ${serviceUrl + "/search"}
+                    body:
+                      prompt: ${searchPrompt}
+                  result: searchResult
+        result: allSearchResults
