@@ -182,11 +182,12 @@ and have PROOF of thought-leadership (articles, talks, open-source tools).
         Return ONLY the JSON object, no other text.`;
 
         const response = await this.client.chat.completions.create({
-          model: process.env.SEARCH_MODEL || 'o1-preview', // Use o1-preview or configured model
+          model: process.env.SEARCH_MODEL || 'gpt-4o', // Use configured model
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: searchPrompt }
           ],
+          response_format: { type: 'json_object' },
           temperature: 0.7,
           max_tokens: 4000,
         });
@@ -195,12 +196,24 @@ and have PROOF of thought-leadership (articles, talks, open-source tools).
         if (!content) throw new Error('No content in response');
 
         // Extract JSON from the response (it might be wrapped in markdown or other text)
-        const jsonMatch = content.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) {
+        // First try to find JSON wrapped in code blocks
+        let jsonStr = content;
+        const codeBlockMatch = content.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
+        if (codeBlockMatch) {
+          jsonStr = codeBlockMatch[1];
+        } else {
+          // Try to extract raw JSON object
+          const jsonMatch = content.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            jsonStr = jsonMatch[0];
+          }
+        }
+        
+        if (!jsonStr || !jsonStr.includes('{')) {
           throw new Error('No JSON found in response');
         }
 
-        const result = JSON.parse(jsonMatch[0]);
+        const result = JSON.parse(jsonStr);
         
         // Validate the response has candidates
         const candidates = Array.isArray(result) ? result : (result.candidates || result.experts || []);
