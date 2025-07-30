@@ -9,7 +9,7 @@ export class ExpertAggregatorService {
   ): Expert[] {
     const expertMap = new Map<string, {
       candidate: SearchCandidate,
-      typeScores: { score: number, importance: number }[]
+      typeScores: { score: number, responsiveness: number, importance: number }[]
     }>();
 
     // Aggregate all candidates by LinkedIn URL
@@ -28,6 +28,7 @@ export class ExpertAggregatorService {
         
         expertMap.get(key)!.typeScores.push({
           score: candidate.relevancy_to_type_score,
+          responsiveness: candidate.responsiveness,
           importance: expertType.importance_score
         });
       });
@@ -36,11 +37,11 @@ export class ExpertAggregatorService {
     // Calculate final relevance scores and convert to Expert format
     const experts: Expert[] = Array.from(expertMap.values()).map(({ candidate, typeScores }) => {
       // Calculate weighted average of relevancy scores
-      const totalWeight = typeScores.reduce((sum, ts) => sum + ts.importance, 0);
-      const weightedScore = typeScores.reduce(
-        (sum, ts) => sum + (ts.score * ts.importance),
+      
+      const totalScore = typeScores.reduce(
+        (sum, ts) => sum + (ts.score * ts.importance * ts.responsiveness),
         0
-      ) / totalWeight;
+      );
 
       return {
         id: uuidv4(),
@@ -49,7 +50,7 @@ export class ExpertAggregatorService {
         company: candidate.company,
         linkedin_url: candidate.linkedin_url,
         email: candidate.email,
-        relevance_score: Math.round(weightedScore * 100) / 100, // Round to 2 decimal places
+        relevance_score: Math.round(totalScore * 100) / 100, // Round to 2 decimal places
         matching_reasons: candidate.matching_reasons,
         personalised_message: candidate.personalised_message,
         areas_of_expertise: candidate.areas_of_expertise || [],

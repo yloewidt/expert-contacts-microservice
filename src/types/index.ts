@@ -30,7 +30,7 @@ export interface SearchCandidate {
   email: string;
   matching_reasons: string[];
   relevancy_to_type_score: number;
-  responsiveness: 'High' | 'Medium' | 'Low';
+  responsiveness: number;
   personalised_message: string;
   areas_of_expertise: string[];
   conversation_topics: string[];
