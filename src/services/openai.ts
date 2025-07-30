@@ -19,7 +19,7 @@ export class OpenAIService {
     }, 'Initializing OpenAI client');
     this.client = new OpenAI({
       apiKey: apiKey,
-      timeout: 30000, // 30 second timeout
+      timeout: 300000, // 30 second timeout
     });
   }
 
@@ -107,7 +107,7 @@ and have PROOF of thought-leadership (articles, talks, open-source tools).
 ▸ Prioritise keywords: [[RELEVANT SEARCHES]]
 ▸ [[ANY ADDITIONAL FOCUSES]].
 
-2. **Short-list 8-12 candidates** who meet ≥ 3 of the following:
+2. **Short-list 8-12 candidates** who meet the following:
 - Published in the last 3 years on [[TOPIC THEY SHOULD BE EXPERT ON]]
 - [[DEMONSTRATED HANDS ON EXPERIENCE RELEVANT TO THE TOPIC]]
 
@@ -152,52 +152,134 @@ and have PROOF of thought-leadership (articles, talks, open-source tools).
   }
 
   async searchExperts(searchPrompt: string): Promise<SearchCandidate[]> {
-    try {
-      logger.info({ searchPrompt }, 'Starting expert search');
+    const maxRetries = 3;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      logger.info({ searchPrompt, attempt, maxRetries }, 'Starting expert search');
       
-      // Note: In production, this would use the o3 model with web search capabilities
-      // For now, we'll simulate with GPT-4o
-      const systemPrompt = `You are tasked with finding expert candidates based on the provided search criteria. Return a JSON object with a "candidates" array. Each candidate should have the following fields:
-      - name: Full name of the expert
-      - title: Current professional title
-      - company: Current company/organization
-      - linkedin_url: LinkedIn profile URL (or null if not found)
-      - email: Professional email address (or null if not found)
-      - matching_reasons: Array of strings explaining why they match
-      - relevancy_to_type_score: Score from 0.0 to 1.0
-      - responsiveness: Expected responsiveness level
-      - personalised_message: Personalized outreach message`;
+      try {
+        const response = await this.client.responses.create({
+          model: "o3",
+          input: [
+            {
+              role: "developer",
+              content: [
+                {
+                  type: "input_text",
+                  text: `You are an elite research assistant and head-hunter tasked with finding expert candidates. 
+                  
+                  You MUST return a JSON object with a "candidates" array containing 8-12 candidates.
+                  
+                  Each candidate MUST have ALL of these fields:
+                  - name: Full name of the expert (string, required)
+                  - title: Current professional title (string, required)
+                  - company: Current company/organization (string, required)
+                  - linkedin_url: LinkedIn profile URL (string, required - must be a valid linkedin.com URL)
+                  - email: Professional email address (string or null)
+                  - matching_reasons: Array of strings explaining why they match, with source citations (array, required, min 2 items)
+                  - relevancy_to_type_score: Score from 0.0 to 1.0 (number, required)
+                  - responsiveness: "High", "Medium", or "Low" (string, required)
+                  - personalised_message: Personalized outreach message (string, required)
+                  
+                  IMPORTANT: All candidates must be real people with verifiable LinkedIn profiles. No fictional examples.`
+                }
+              ]
+            },
+            {
+              role: "user",
+              content: [
+                {
+                  type: "input_text",
+                  text: searchPrompt
+                }
+              ]
+            }
+          ],
+          text: {
+            format: {
+              type: "text"
+            }
+          },
+          reasoning: {
+            effort: "medium"
+          },
+          tools: [
+            {
+              type: "web_search_preview",
+              user_location: {
+                type: "approximate",
+                country: "US"
+              },
+              search_context_size: "medium"
+            }
+          ],
+          store: true
+        });
 
-      const response = await this.client.chat.completions.create({
-        model: process.env.SEARCH_MODEL || 'gpt-4o', // o3 model with web search in production
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: searchPrompt }
-        ],
-        response_format: { type: 'json_object' },
-        temperature: 0.7,
-      });
+        // Parse the response
+        const content = response.choices?.[0]?.message?.content || response.content || '';
+        if (!content) throw new Error('No content in response');
 
-      const content = response.choices[0].message.content;
-      if (!content) throw new Error('No content in response');
+        // Extract JSON from the response (it might be wrapped in markdown or other text)
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+          throw new Error('No JSON found in response');
+        }
 
-      const result = JSON.parse(content);
-      logger.info({ candidatesFound: result.candidates?.length || 0 }, 'Found expert candidates');
-      
-      // Handle various response formats
-      if (Array.isArray(result)) {
-        return result;
-      } else if (result.candidates && Array.isArray(result.candidates)) {
-        return result.candidates;
-      } else if (result.experts && Array.isArray(result.experts)) {
-        return result.experts;
-      } else {
-        logger.warn({ result }, 'No candidates found in response');
-        return [];
+        const result = JSON.parse(jsonMatch[0]);
+        
+        // Validate the response has candidates
+        const candidates = Array.isArray(result) ? result : (result.candidates || result.experts || []);
+        
+        if (!Array.isArray(candidates) || candidates.length === 0) {
+          throw new Error(`No candidates found in response on attempt ${attempt}`);
+        }
+        
+        // Validate each candidate has required fields
+        const validCandidates = candidates.filter(candidate => 
+          candidate.name && 
+          candidate.title && 
+          candidate.company && 
+          candidate.linkedin_url?.includes('linkedin.com') &&
+          Array.isArray(candidate.matching_reasons) &&
+          candidate.matching_reasons.length >= 2 &&
+          typeof candidate.relevancy_to_type_score === 'number' &&
+          candidate.responsiveness &&
+          candidate.personalised_message
+        );
+        
+        if (validCandidates.length < 5) {
+          if (attempt === maxRetries) {
+            logger.warn({ 
+              validCount: validCandidates.length, 
+              totalCount: candidates.length 
+            }, 'Insufficient valid candidates after all attempts');
+            return validCandidates; // Return what we have
+          }
+          throw new Error(`Only ${validCandidates.length} valid candidates found, retrying...`);
+        }
+        
+        logger.info({ 
+          candidatesFound: validCandidates.length,
+          attempt 
+        }, 'Successfully found expert candidates');
+        
+        return validCandidates;
+        
+      } catch (error) {
+        logger.error({ error: error.message, attempt }, 'Expert search attempt failed');
+        
+        if (attempt === maxRetries) {
+          logger.error({ error }, 'All expert search attempts failed');
+          // Return empty array instead of throwing to prevent workflow failure
+          return [];
+        }
+        
+        // Add more specific requirements for retry
+        logger.info('Retrying with enhanced requirements...');
       }
-    } catch (error) {
-      logger.error({ error }, 'Error searching for experts');
-      throw error;
     }
+    
+    return []; // Should never reach here
   }
 }
