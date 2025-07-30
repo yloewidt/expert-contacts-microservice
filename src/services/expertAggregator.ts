@@ -51,7 +51,9 @@ export class ExpertAggregatorService {
         email: candidate.email,
         relevance_score: Math.round(weightedScore * 100) / 100, // Round to 2 decimal places
         matching_reasons: candidate.matching_reasons,
-        personalised_message: candidate.personalised_message
+        personalised_message: candidate.personalised_message,
+        areas_of_expertise: candidate.areas_of_expertise || [],
+        conversation_topics: candidate.conversation_topics || []
       };
     });
 
