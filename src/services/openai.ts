@@ -155,65 +155,103 @@ and have PROOF of thought-leadership (articles, talks, open-source tools).
     const maxRetries = 3;
     
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      logger.info({ searchPrompt, attempt, maxRetries }, 'Starting expert search');
+      logger.info({ searchPrompt, attempt, maxRetries }, 'Starting expert search with o3');
       
       try {
-        // Use o1-preview which has web search capabilities
-        // o3 model access requires special API that might not be available yet
-        const systemPrompt = `You are an elite research assistant and head-hunter tasked with finding expert candidates. 
-        
-        You have access to web search. Use it to find REAL experts with verifiable LinkedIn profiles.
-        
-        You MUST return a JSON object with a "candidates" array containing 8-12 candidates.
-        
-        Each candidate MUST have ALL of these fields:
-        - name: Full name of the expert (string, required)
-        - title: Current professional title (string, required)
-        - company: Current company/organization (string, required)
-        - linkedin_url: LinkedIn profile URL (string, required - must be a valid linkedin.com URL)
-        - email: Professional email address (string or null)
-        - matching_reasons: Array of strings explaining why they match, with source citations (array, required, min 2 items)
-        - relevancy_to_type_score: Score from 0.0 to 1.0 (number, required)
-        - responsiveness: "High", "Medium", or "Low" (string, required)
-        - personalised_message: Personalized outreach message (string, required)
-        
-        IMPORTANT: All candidates must be real people with verifiable LinkedIn profiles. No fictional examples.
-        
-        Return ONLY the JSON object, no other text.`;
-
-        const response = await this.client.chat.completions.create({
-          model: process.env.SEARCH_MODEL || 'gpt-4o', // Use configured model
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: searchPrompt }
+        const response = await (this.client as any).responses.create({
+          model: "o3",
+          input: [
+            {
+              role: "developer",
+              content: [
+                {
+                  type: "input_text",
+                  text: `You are an elite research assistant and head-hunter tasked with finding expert candidates. 
+                  
+                  You MUST return a JSON object with a "candidates" array containing 8-12 candidates.
+                  
+                  Each candidate MUST have ALL of these fields:
+                  - name: Full name of the expert (string, required)
+                  - title: Current professional title (string, required)
+                  - company: Current company/organization (string, required)
+                  - linkedin_url: LinkedIn profile URL (string, required - must be a valid linkedin.com URL)
+                  - email: Professional email address (string or null)
+                  - matching_reasons: Array of strings explaining why they match, with source citations (array, required, min 2 items)
+                  - relevancy_to_type_score: Score from 0.0 to 1.0 (number, required)
+                  - responsiveness: "High", "Medium", or "Low" (string, required)
+                  - personalised_message: Personalized outreach message (string, required)
+                  
+                  IMPORTANT: All candidates must be real people with verifiable LinkedIn profiles. No fictional examples.`
+                }
+              ]
+            },
+            {
+              role: "user",
+              content: [
+                {
+                  type: "input_text",
+                  text: searchPrompt
+                }
+              ]
+            }
           ],
-          response_format: { type: 'json_object' },
-          temperature: 0.7,
-          max_tokens: 4000,
+          text: {
+            format: {
+              type: "json",
+              schema: {
+                type: "object",
+                properties: {
+                  candidates: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        name: { type: "string" },
+                        title: { type: "string" },
+                        company: { type: "string" },
+                        linkedin_url: { type: "string" },
+                        email: { type: ["string", "null"] },
+                        matching_reasons: {
+                          type: "array",
+                          items: { type: "string" }
+                        },
+                        relevancy_to_type_score: { type: "number" },
+                        responsiveness: { 
+                          type: "string",
+                          enum: ["High", "Medium", "Low"]
+                        },
+                        personalised_message: { type: "string" }
+                      },
+                      required: ["name", "title", "company", "linkedin_url", "matching_reasons", "relevancy_to_type_score", "responsiveness", "personalised_message"]
+                    }
+                  }
+                },
+                required: ["candidates"]
+              }
+            }
+          },
+          reasoning: {
+            effort: "medium"
+          },
+          tools: [
+            {
+              type: "web_search_preview",
+              user_location: {
+                type: "approximate",
+                country: "US"
+              },
+              search_context_size: "medium"
+            }
+          ],
+          store: true
         });
 
-        const content = response.choices[0]?.message?.content || '';
-        if (!content) throw new Error('No content in response');
-
-        // Extract JSON from the response (it might be wrapped in markdown or other text)
-        // First try to find JSON wrapped in code blocks
-        let jsonStr = content;
-        const codeBlockMatch = content.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
-        if (codeBlockMatch) {
-          jsonStr = codeBlockMatch[1];
-        } else {
-          // Try to extract raw JSON object
-          const jsonMatch = content.match(/\{[\s\S]*\}/);
-          if (jsonMatch) {
-            jsonStr = jsonMatch[0];
-          }
-        }
+        // o3 should return the content directly as JSON when format is specified
+        const result = typeof response.content === 'string' ? JSON.parse(response.content) : response.content;
         
-        if (!jsonStr || !jsonStr.includes('{')) {
-          throw new Error('No JSON found in response');
+        if (!result) {
+          throw new Error('No content in response');
         }
-
-        const result = JSON.parse(jsonStr);
         
         // Validate the response has candidates
         const candidates = Array.isArray(result) ? result : (result.candidates || result.experts || []);
