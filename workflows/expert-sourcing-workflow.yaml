@@ -58,10 +58,13 @@ main:
           - searchResults: []
           
     - executeSearches:
-        for:
-          value: searchPrompt
-          index: i
-          in: ${searchPrompts}
+        parallel:
+          shared: [searchResults]
+          concurrency_limit: 5
+          for:
+            value: searchPrompt
+            index: i
+            in: ${searchPrompts}
           steps:
             - callSearch:
                 call: http.post

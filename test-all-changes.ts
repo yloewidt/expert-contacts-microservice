@@ -1,6 +1,5 @@
 import dotenv from 'dotenv';
 import { OpenAIService } from './src/services/openai';
-import { logger } from './src/config/logger';
 
 dotenv.config();
 
@@ -114,11 +113,14 @@ async function testWorkflowYaml() {
   
   try {
     const workflowContent = readFileSync('./workflows/expert-sourcing-workflow.yaml', 'utf8');
-    const workflow = yaml.load(workflowContent);
+    const workflow = yaml.load(workflowContent) as any;
     
-    // Check for parallel step
-    const hasParallel = JSON.stringify(workflow).includes('parallel');
-    if (hasParallel) {
+    // Check for parallel step in executeSearches
+    const executeSearchesStep = workflow.main.steps.find((step: any) => 
+      step.executeSearches !== undefined
+    );
+    
+    if (executeSearchesStep && executeSearchesStep.executeSearches.parallel) {
       console.log('✅ Workflow contains parallel execution');
     } else {
       console.log('❌ Workflow missing parallel execution');
