@@ -96,6 +96,12 @@ router.post('/internal/aggregate-results', async (req: Request, res: Response): 
       return res.status(400).json({ error: 'Missing required fields' });
     }
     
+    // Validate search_results is an array
+    if (!Array.isArray(search_results)) {
+      logger.error({ search_results, type: typeof search_results }, 'search_results is not an array');
+      return res.status(400).json({ error: 'search_results must be an array' });
+    }
+    
     // Save raw outputs to Cloud Storage
     try {
       await cloudStorage.uploadRawOutput(request_id, 'expert_types', expert_types);

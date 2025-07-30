@@ -67,15 +67,25 @@ main:
             in: ${searchPrompts}
             steps:
               - callSearch:
-                  call: http.post
-                  args:
-                    url: ${serviceUrl + "/internal/search-experts"}
-                    body:
-                      search_prompt: ${searchPrompt}
-                    auth:
-                      type: OIDC
-                    timeout: 300
-                  result: searchResult
+                  try:
+                    call: http.post
+                    args:
+                      url: ${serviceUrl + "/internal/search-experts"}
+                      body:
+                        search_prompt: ${searchPrompt}
+                      auth:
+                        type: OIDC
+                      timeout: 120
+                    result: searchResult
+                  except:
+                    as: e
+                    steps:
+                      - handleSearchError:
+                          assign:
+                            - searchResult:
+                                body:
+                                  candidates: []
+                                  error: ${e.message}
               - appendSearchResult:
                   assign:
                     - searchResults: ${list.concat(searchResults, searchResult.body)}
