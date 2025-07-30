@@ -158,66 +158,40 @@ and have PROOF of thought-leadership (articles, talks, open-source tools).
       logger.info({ searchPrompt, attempt, maxRetries }, 'Starting expert search');
       
       try {
-        const response = await this.client.responses.create({
-          model: "o3",
-          input: [
-            {
-              role: "developer",
-              content: [
-                {
-                  type: "input_text",
-                  text: `You are an elite research assistant and head-hunter tasked with finding expert candidates. 
-                  
-                  You MUST return a JSON object with a "candidates" array containing 8-12 candidates.
-                  
-                  Each candidate MUST have ALL of these fields:
-                  - name: Full name of the expert (string, required)
-                  - title: Current professional title (string, required)
-                  - company: Current company/organization (string, required)
-                  - linkedin_url: LinkedIn profile URL (string, required - must be a valid linkedin.com URL)
-                  - email: Professional email address (string or null)
-                  - matching_reasons: Array of strings explaining why they match, with source citations (array, required, min 2 items)
-                  - relevancy_to_type_score: Score from 0.0 to 1.0 (number, required)
-                  - responsiveness: "High", "Medium", or "Low" (string, required)
-                  - personalised_message: Personalized outreach message (string, required)
-                  
-                  IMPORTANT: All candidates must be real people with verifiable LinkedIn profiles. No fictional examples.`
-                }
-              ]
-            },
-            {
-              role: "user",
-              content: [
-                {
-                  type: "input_text",
-                  text: searchPrompt
-                }
-              ]
-            }
+        // Use o1-preview which has web search capabilities
+        // o3 model access requires special API that might not be available yet
+        const systemPrompt = `You are an elite research assistant and head-hunter tasked with finding expert candidates. 
+        
+        You have access to web search. Use it to find REAL experts with verifiable LinkedIn profiles.
+        
+        You MUST return a JSON object with a "candidates" array containing 8-12 candidates.
+        
+        Each candidate MUST have ALL of these fields:
+        - name: Full name of the expert (string, required)
+        - title: Current professional title (string, required)
+        - company: Current company/organization (string, required)
+        - linkedin_url: LinkedIn profile URL (string, required - must be a valid linkedin.com URL)
+        - email: Professional email address (string or null)
+        - matching_reasons: Array of strings explaining why they match, with source citations (array, required, min 2 items)
+        - relevancy_to_type_score: Score from 0.0 to 1.0 (number, required)
+        - responsiveness: "High", "Medium", or "Low" (string, required)
+        - personalised_message: Personalized outreach message (string, required)
+        
+        IMPORTANT: All candidates must be real people with verifiable LinkedIn profiles. No fictional examples.
+        
+        Return ONLY the JSON object, no other text.`;
+
+        const response = await this.client.chat.completions.create({
+          model: process.env.SEARCH_MODEL || 'o1-preview', // Use o1-preview or configured model
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: searchPrompt }
           ],
-          text: {
-            format: {
-              type: "text"
-            }
-          },
-          reasoning: {
-            effort: "medium"
-          },
-          tools: [
-            {
-              type: "web_search_preview",
-              user_location: {
-                type: "approximate",
-                country: "US"
-              },
-              search_context_size: "medium"
-            }
-          ],
-          store: true
+          temperature: 0.7,
+          max_tokens: 4000,
         });
 
-        // Parse the response
-        const content = response.choices?.[0]?.message?.content || response.content || '';
+        const content = response.choices[0]?.message?.content || '';
         if (!content) throw new Error('No content in response');
 
         // Extract JSON from the response (it might be wrapped in markdown or other text)
@@ -267,7 +241,8 @@ and have PROOF of thought-leadership (articles, talks, open-source tools).
         return validCandidates;
         
       } catch (error) {
-        logger.error({ error: error.message, attempt }, 'Expert search attempt failed');
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        logger.error({ error: errorMessage, attempt }, 'Expert search attempt failed');
         
         if (attempt === maxRetries) {
           logger.error({ error }, 'All expert search attempts failed');
