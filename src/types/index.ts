@@ -35,6 +35,7 @@ export interface SearchCandidate {
 export interface SourcingResponse {
   request_id: string;
   status: 'pending' | 'processing' | 'completed' | 'failed';
+  project_description?: string;
   experts?: Expert[];
   metadata?: {
     created_at: string;

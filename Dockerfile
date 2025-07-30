@@ -38,8 +38,12 @@ RUN npm ci --production && \
 # Copy built application from builder stage
 COPY --from=builder /app/dist ./dist
 
+# Copy startup script
+COPY run.sh ./
+
 # Change ownership to nodejs user
-RUN chown -R nodejs:nodejs /app
+RUN chown -R nodejs:nodejs /app && \
+    chmod +x /app/run.sh
 
 # Switch to non-root user
 USER nodejs
@@ -50,5 +54,5 @@ EXPOSE 8080
 # Use dumb-init to handle signals properly
 ENTRYPOINT ["dumb-init", "--"]
 
-# Start the application
-CMD ["node", "dist/index.js"]
+# Start the application with our script
+CMD ["/app/run.sh"]

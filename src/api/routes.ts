@@ -1,14 +1,13 @@
 import { Router, Request, Response } from 'express';
 import Joi from 'joi';
-import { v4 as uuidv4 } from 'uuid';
 import { logger } from '../config/logger';
 import { Database } from '../models/database';
-import { CloudTasksService } from '../services/cloudTasks';
+// import { CloudTasksService } from '../services/cloudTasks';
 import { ExpertSourcingRequest, SourcingResponse } from '../types';
 
 const router = Router();
 const db = new Database();
-const cloudTasks = new CloudTasksService();
+// const cloudTasks = new CloudTasksService();
 
 // Validation schema
 const sourcingRequestSchema = Joi.object({
@@ -16,7 +15,7 @@ const sourcingRequestSchema = Joi.object({
 });
 
 // POST /api/v1/source
-router.post('/api/v1/source', async (req: Request, res: Response) => {
+router.post('/api/v1/source', async (req: Request, res: Response): Promise<Response> => {
   try {
     // Validate request body
     const { error, value } = sourcingRequestSchema.validate(req.body);
@@ -34,8 +33,18 @@ router.post('/api/v1/source', async (req: Request, res: Response) => {
     
     logger.info({ request_id: requestId }, 'Expert sourcing request created');
 
-    // Create Cloud Task to process request asynchronously
-    await cloudTasks.createSourcingTask(requestId, project_description);
+    // Create Cloud Task to trigger Cloud Workflow
+    // TODO: Enable this once workflow is properly configured
+    /*
+    try {
+      await cloudTasks.createWorkflowTask(requestId, project_description);
+    } catch (error) {
+      logger.error({ error, requestId }, 'Failed to create Cloud Task, falling back to direct processing');
+      // If Cloud Tasks fails, update status to failed
+      await db.updateRequestStatus(requestId, 'failed');
+      throw error;
+    }
+    */
 
     // Return immediate response
     const response: SourcingResponse = {
@@ -44,15 +53,21 @@ router.post('/api/v1/source', async (req: Request, res: Response) => {
       message: `Expert sourcing initiated. Check status using GET /api/v1/source/${requestId}`
     };
 
-    res.status(202).json(response);
+    return res.status(202).json(response);
   } catch (error) {
-    logger.error({ error }, 'Error creating sourcing request');
-    res.status(500).json({ error: 'Internal server error' });
+    logger.error({ 
+      error: error instanceof Error ? {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      } : error 
+    }, 'Error creating sourcing request');
+    return res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // GET /api/v1/source/:id
-router.get('/api/v1/source/:id', async (req: Request, res: Response) => {
+router.get('/api/v1/source/:id', async (req: Request, res: Response): Promise<Response> => {
   try {
     const { id } = req.params;
 
@@ -65,7 +80,8 @@ router.get('/api/v1/source/:id', async (req: Request, res: Response) => {
 
     const response: SourcingResponse = {
       request_id: request.id,
-      status: request.status
+      status: request.status,
+      project_description: request.project_description
     };
 
     // If completed, include experts and metadata
@@ -88,10 +104,10 @@ router.get('/api/v1/source/:id', async (req: Request, res: Response) => {
       }
     }
 
-    res.json(response);
+    return res.json(response);
   } catch (error) {
     logger.error({ error }, 'Error retrieving sourcing request');
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 });
 

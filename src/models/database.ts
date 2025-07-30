@@ -11,8 +11,13 @@ export class Database {
       RETURNING id
     `;
     
-    const result = await pool.query(query, [id, projectDescription]);
-    return result.rows[0].id;
+    try {
+      const result = await pool.query(query, [id, projectDescription]);
+      return result.rows[0].id;
+    } catch (error) {
+      console.error('Database error in createSourcingRequest:', error);
+      throw error;
+    }
   }
 
   async updateRequestStatus(requestId: string, status: string, completedAt?: Date): Promise<void> {
@@ -22,6 +27,11 @@ export class Database {
     
     const params = completedAt ? [requestId, status, completedAt] : [requestId, status];
     await pool.query(query, params);
+  }
+
+  async updateRequestCompletedAt(requestId: string): Promise<void> {
+    const query = 'UPDATE expert_sourcing_requests SET completed_at = CURRENT_TIMESTAMP WHERE id = $1';
+    await pool.query(query, [requestId]);
   }
 
   async getRequest(requestId: string) {
@@ -156,5 +166,105 @@ export class Database {
       search_prompts: JSON.parse(row.search_prompts),
       search_results: JSON.parse(row.search_results)
     };
+  }
+
+  async getAllJobs() {
+    const query = `
+      SELECT 
+        id,
+        project_description,
+        status,
+        created_at,
+        completed_at
+      FROM expert_sourcing_requests
+      ORDER BY created_at DESC
+    `;
+    const result = await pool.query(query);
+    return result.rows;
+  }
+
+  async storeRawOutput(requestId: string, outputType: string, data: any): Promise<void> {
+    // Check if a record already exists
+    const checkQuery = 'SELECT id FROM expert_sourcing_raw_outputs WHERE request_id = $1';
+    const checkResult = await pool.query(checkQuery, [requestId]);
+    
+    if (checkResult.rows.length === 0) {
+      // Insert new record
+      const id = uuidv4();
+      const insertQuery = `
+        INSERT INTO expert_sourcing_raw_outputs (id, request_id, expert_types, search_prompts, search_results)
+        VALUES ($1, $2, $3, $4, $5)
+      `;
+      
+      if (outputType === 'expert_types') {
+        await pool.query(insertQuery, [id, requestId, JSON.stringify(data), '[]', '[]']);
+      } else if (outputType.startsWith('search_')) {
+        await pool.query(insertQuery, [id, requestId, '[]', JSON.stringify([outputType]), JSON.stringify([data])]);
+      }
+    } else {
+      // Update existing record
+      if (outputType === 'expert_types') {
+        const updateQuery = `
+          UPDATE expert_sourcing_raw_outputs 
+          SET expert_types = $2::jsonb
+          WHERE request_id = $1
+        `;
+        await pool.query(updateQuery, [requestId, JSON.stringify(data)]);
+      } else if (outputType.startsWith('search_')) {
+        const updateQuery = `
+          UPDATE expert_sourcing_raw_outputs 
+          SET search_prompts = search_prompts::jsonb || $2::jsonb,
+              search_results = search_results::jsonb || $3::jsonb
+          WHERE request_id = $1
+        `;
+        await pool.query(updateQuery, [requestId, JSON.stringify([outputType]), JSON.stringify([data])]);
+      }
+    }
+  }
+
+  async createExpert(expert: Partial<Expert>): Promise<string> {
+    const id = uuidv4();
+    const query = `
+      INSERT INTO experts (id, name, title, company, linkedin_url, email, created_at, updated_at)
+      VALUES ($1, $2, $3, $4, COALESCE($5, ''), $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      ON CONFLICT (linkedin_url) 
+      DO UPDATE SET 
+        name = EXCLUDED.name,
+        title = EXCLUDED.title,
+        company = EXCLUDED.company,
+        email = COALESCE(EXCLUDED.email, experts.email),
+        updated_at = CURRENT_TIMESTAMP
+      RETURNING id
+    `;
+    
+    const result = await pool.query(query, [
+      id,
+      expert.name,
+      expert.title,
+      expert.company,
+      expert.linkedin_url,
+      expert.email
+    ]);
+    
+    return result.rows[0].id;
+  }
+
+  async createExpertMatch(requestId: string, expertId: string, matchData: any): Promise<void> {
+    const id = uuidv4();
+    const query = `
+      INSERT INTO expert_request_matches 
+      (id, request_id, expert_id, relevance_score, email, matching_reasons, personalised_message, created_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP)
+    `;
+    
+    await pool.query(query, [
+      id,
+      requestId,
+      expertId,
+      matchData.relevancy_score || matchData.relevance_score,
+      matchData.email || null,
+      JSON.stringify(matchData.matching_reasons || []),
+      matchData.suggested_message || matchData.personalised_message || ''
+    ]);
   }
 }

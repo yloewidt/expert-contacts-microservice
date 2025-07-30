@@ -6,20 +6,39 @@ export class OpenAIService {
   private client: OpenAI;
 
   constructor() {
+    const apiKey = process.env.OPENAI_API_KEY?.trim();
+    if (!apiKey) {
+      logger.error('OPENAI_API_KEY is not set');
+      throw new Error('OPENAI_API_KEY is not configured');
+    }
+    logger.info({ 
+      hasApiKey: !!apiKey, 
+      keyLength: apiKey.length,
+      firstChars: apiKey.substring(0, 10),
+      lastChars: apiKey.substring(apiKey.length - 10)
+    }, 'Initializing OpenAI client');
     this.client = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
+      apiKey: apiKey,
     });
   }
 
   async generateExpertTypes(projectDescription: string): Promise<ExpertType[]> {
     try {
-      const systemPrompt = `I am looking for experts to help me validate a topic. Based on the project description, what specific types of experts should I target? For each type, provide a title, a reason ("why") they are relevant, and assign an importance score from 0.0 to 1.0 for each expert type.`;
+      logger.info('Starting generateExpertTypes');
+      const systemPrompt = `I am looking for experts to help me validate a topic. Based on the project description, what specific types of experts should I target? For each type, provide a title, a reason ("why") they are relevant, and assign an importance score from 0.0 to 1.0 for each expert type.
+      
+      Return your response as a JSON array of objects with the following structure:
+      [{
+        "expert_title": "string",
+        "why": "string",
+        "importance_score": 0.9
+      }]`;
 
       const response = await this.client.chat.completions.create({
         model: 'gpt-4o',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: projectDescription }
+          { role: 'user', content: `Project Description: ${projectDescription}` }
         ],
         response_format: { type: 'json_object' },
         temperature: 0.7,
@@ -31,14 +50,15 @@ export class OpenAIService {
       const result = JSON.parse(content);
       logger.info({ expertTypes: result }, 'Generated expert types');
       
-      // Handle various response formats
-      if (Array.isArray(result)) {
-        return result;
-      } else if (result.expert_types && Array.isArray(result.expert_types)) {
-        return result.expert_types;
-      } else {
-        throw new Error('Unexpected response format');
-      }
+      // Ensure the result is an array
+      const expertTypes = Array.isArray(result) ? result : (result.expert_types || result.experts || []);
+      
+      // Validate and fix field names
+      return expertTypes.map((type: any) => ({
+        expert_title: type.expert_title || type.title,
+        why: type.why || type.reason,
+        importance_score: type.importance_score || type.importance || 0.5
+      }));
     } catch (error) {
       logger.error({ error }, 'Error generating expert types');
       throw error;
@@ -47,26 +67,15 @@ export class OpenAIService {
 
   async generateSearchPrompt(projectDescription: string, expertType: ExpertType): Promise<string> {
     try {
-      const userPrompt = `I'm looking to validate the following project:\n${projectDescription}\nTo do this, I'm looking for an expert like a ${expertType.expert_title} because ${expertType.why}.\nHelp me write a search prompt based on this need, using the provided template.`;
+      const userPrompt = `I'm looking to validate the following project:\n${projectDescription}\nTo do this, I'm looking for an expert like a ${expertType.expert_title} because ${expertType.why}.\nHelp me write a search prompt based on this need, using the provided template.
 
-      const response = await this.client.chat.completions.create({
-        model: 'gpt-4o',
-        messages: [
-          { role: 'user', content: userPrompt }
-        ],
-        temperature: 0.7,
-      });
+Fill in the template below by replacing the [[PLACEHOLDERS]] with specific, relevant information based on the project and expert type:
 
-      const content = response.choices[0].message.content;
-      if (!content) throw new Error('No content in response');
-
-      // Replace placeholders in the template
-      const template = `### SYSTEM
+### SYSTEM
 You are an elite research assistant and head-hunter.
 Your job: surface INDIVIDUAL consultants (no firms) who combine
 [[RELEVANT EXPERIENCE OF THE PEOPLE I AM LOOKING FOR]]
 and have PROOF of thought-leadership (articles, talks, open-source tools).
-
 
 ### TASK
 1. **Search strategy**
@@ -74,20 +83,16 @@ and have PROOF of thought-leadership (articles, talks, open-source tools).
 ▸ Prioritise keywords: [[RELEVANT SEARCHES]]
 ▸ [[ANY ADDITIONAL FOCUSES]].
 
-
 2. **Short-list 8-12 candidates** who meet ≥ 3 of the following:
 - Published in the last 3 years on [[TOPIC THEY SHOULD BE EXPERT ON]]
 - [[DEMONSTRATED HANDS ON EXPERIENCE RELEVANT TO THE TOPIC]]
 
-
 3. For EACH candidate, return a JSON object with: name, title, company, linkedin_url, email, matching_reasons (as an array of strings), relevancy_to_type_score (a number from 0.0 to 1.0 indicating how well they match this specific expert type), responsiveness, and a personalised_message.
-
 
 ### CONSTRAINTS
 - Individuals only (no brokerages or consulting firms).
 - Find a public email where possible.
 - Cite every claim with a hyperlink inside the matching_reasons.
-
 
 ### EXAMPLE OUTPUT (structure only)
 [
@@ -104,7 +109,18 @@ and have PROOF of thought-leadership (articles, talks, open-source tools).
   }
 ]`;
 
-      return content || template;
+      const response = await this.client.chat.completions.create({
+        model: 'gpt-4o',
+        messages: [
+          { role: 'user', content: userPrompt }
+        ],
+        temperature: 0.7,
+      });
+
+      const content = response.choices[0].message.content;
+      if (!content) throw new Error('No content in response');
+
+      return content;
     } catch (error) {
       logger.error({ error }, 'Error generating search prompt');
       throw error;
@@ -115,9 +131,21 @@ and have PROOF of thought-leadership (articles, talks, open-source tools).
     try {
       // Note: In production, this would use the o3 model with web search capabilities
       // For now, we'll simulate with GPT-4o
+      const systemPrompt = `You are tasked with finding expert candidates based on the provided search criteria. Return a JSON object with a "candidates" array. Each candidate should have the following fields:
+      - name: Full name of the expert
+      - title: Current professional title
+      - company: Current company/organization
+      - linkedin_url: LinkedIn profile URL (or null if not found)
+      - email: Professional email address (or null if not found)
+      - matching_reasons: Array of strings explaining why they match
+      - relevancy_to_type_score: Score from 0.0 to 1.0
+      - responsiveness: Expected responsiveness level
+      - personalised_message: Personalized outreach message`;
+
       const response = await this.client.chat.completions.create({
-        model: 'gpt-4o', // Would be 'o3' in production
+        model: process.env.SEARCH_MODEL || 'gpt-4o', // o3 model with web search in production
         messages: [
+          { role: 'system', content: systemPrompt },
           { role: 'user', content: searchPrompt }
         ],
         response_format: { type: 'json_object' },
@@ -128,7 +156,7 @@ and have PROOF of thought-leadership (articles, talks, open-source tools).
       if (!content) throw new Error('No content in response');
 
       const result = JSON.parse(content);
-      logger.info({ candidatesFound: result.length || 0 }, 'Found expert candidates');
+      logger.info({ candidatesFound: result.candidates?.length || 0 }, 'Found expert candidates');
       
       // Handle various response formats
       if (Array.isArray(result)) {
@@ -138,6 +166,7 @@ and have PROOF of thought-leadership (articles, talks, open-source tools).
       } else if (result.experts && Array.isArray(result.experts)) {
         return result.experts;
       } else {
+        logger.warn({ result }, 'No candidates found in response');
         return [];
       }
     } catch (error) {

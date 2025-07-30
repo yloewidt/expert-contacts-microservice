@@ -27,49 +27,61 @@ main:
             type: OIDC
         result: expertTypesResponse
         
-    - generateSearchPrompts:
-        call: parallel_for
-        args:
-          shared: [serviceUrl, projectDescription]
-          concurrency_limit: 5
-          values: ${expertTypesResponse.body.expert_types}
-          body:
-            call: http.post
-            args:
-              url: ${serviceUrl + "/internal/generate-search-prompt"}
-              body:
-                project_description: ${projectDescription}
-                expert_type: ${value}
-              auth:
-                type: OIDC
-            result: promptResult
-        result: searchPrompts
-        
+    - prepareSearchPrompts:
+        assign:
+          - searchPrompts: []
+          - expertTypes: ${expertTypesResponse.body.expert_types}
+          
+    - generatePrompts:
+        for:
+          value: expertType
+          in: ${expertTypes}
+          steps:
+            - callPromptGeneration:
+                call: http.post
+                args:
+                  url: ${serviceUrl + "/internal/generate-search-prompt"}
+                  body:
+                    project_description: ${projectDescription}
+                    expert_type: ${expertType}
+                  auth:
+                    type: OIDC
+                result: promptResult
+            - appendPrompt:
+                assign:
+                  - searchPrompts: ${list.concat(searchPrompts, promptResult.body.search_prompt)}
+                  
+    - prepareSearchResults:
+        assign:
+          - searchResults: []
+          
     - executeSearches:
-        call: parallel_for
-        args:
-          shared: [serviceUrl]
-          concurrency_limit: 3
-          values: ${searchPrompts}
-          body:
-            call: http.post
-            args:
-              url: ${serviceUrl + "/internal/search-experts"}
-              body:
-                search_prompt: ${value.body.search_prompt}
-              auth:
-                type: OIDC
-              timeout: 300  # 5 minutes timeout for each search
-            result: searchResult
-        result: searchResults
-        
+        for:
+          value: searchPrompt
+          index: i
+          in: ${searchPrompts}
+          steps:
+            - callSearch:
+                call: http.post
+                args:
+                  url: ${serviceUrl + "/internal/search-experts"}
+                  body:
+                    search_prompt: ${searchPrompt}
+                  auth:
+                    type: OIDC
+                  timeout: 300
+                result: searchResult
+            - appendSearchResult:
+                assign:
+                  - searchResults: ${list.concat(searchResults, searchResult.body)}
+                  
     - aggregateResults:
         call: http.post
         args:
           url: ${serviceUrl + "/internal/aggregate-results"}
           body:
             request_id: ${requestId}
-            expert_types: ${expertTypesResponse.body.expert_types}
+            expert_types: ${expertTypes}
             search_prompts: ${searchPrompts}
             search_results: ${searchResults}
           auth:

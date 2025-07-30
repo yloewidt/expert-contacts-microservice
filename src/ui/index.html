@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expert Contacts - Sourcing Results</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .nav {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .nav-button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-button.active {
+            background-color: #667eea;
+            color: white;
+        }
+        
+        .nav-button:not(.active) {
+            background-color: white;
+            color: #667eea;
+            border: 1px solid #667eea;
+        }
+        
+        .nav-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .job-list {
+            display: grid;
+            gap: 20px;
+        }
+        
+        .job-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .job-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .job-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .job-status.completed {
+            background-color: #10b981;
+            color: white;
+        }
+        
+        .job-status.processing {
+            background-color: #f59e0b;
+            color: white;
+        }
+        
+        .job-status.failed {
+            background-color: #ef4444;
+            color: white;
+        }
+        
+        .job-status.pending {
+            background-color: #6b7280;
+            color: white;
+        }
+        
+        .expert-grid {
+            display: grid;
+            gap: 20px;
+        }
+        
+        .expert-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .expert-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .expert-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+        
+        .expert-info h3 {
+            margin-bottom: 5px;
+        }
+        
+        .expert-info h3 a {
+            color: #667eea;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .expert-info h3 a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+        
+        .expert-title {
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        .expert-company {
+            color: #9ca3af;
+            font-size: 14px;
+        }
+        
+        .expert-score {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .expert-reasons {
+            margin-top: 15px;
+        }
+        
+        .expert-reasons h4 {
+            font-size: 14px;
+            color: #4b5563;
+            margin-bottom: 8px;
+        }
+        
+        .expert-reasons ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .expert-reasons li {
+            padding: 8px 0;
+            padding-left: 20px;
+            position: relative;
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .expert-reasons li:before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #10b981;
+            font-weight: bold;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+        
+        .error {
+            background-color: #fee;
+            color: #c00;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        
+        .job-description {
+            background-color: #f3f4f6;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-style: italic;
+            color: #4b5563;
+        }
+        
+        .metadata {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 20px;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        .no-linkedin {
+            color: #9ca3af;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        
+        const API_BASE = window.location.origin;
+        
+        function App() {
+            const [view, setView] = useState('jobs');
+            const [jobs, setJobs] = useState([]);
+            const [selectedJob, setSelectedJob] = useState(null);
+            const [jobDetails, setJobDetails] = useState(null);
+            const [loading, setLoading] = useState(false);
+            const [error, setError] = useState(null);
+            
+            useEffect(() => {
+                if (view === 'jobs') {
+                    fetchJobs();
+                }
+            }, [view]);
+            
+            useEffect(() => {
+                if (selectedJob) {
+                    fetchJobDetails(selectedJob);
+                }
+            }, [selectedJob]);
+            
+            const fetchJobs = async () => {
+                setLoading(true);
+                setError(null);
+                try {
+                    const response = await fetch(`${API_BASE}/api/v1/jobs`);
+                    if (!response.ok) throw new Error('Failed to fetch jobs');
+                    const data = await response.json();
+                    setJobs(data.jobs || []);
+                } catch (err) {
+                    setError(err.message);
+                    // Fallback to sample data if API is not available
+                    setJobs([
+                        {
+                            id: '3de1b5cd-7017-4a61-8833-e5f4a6d7d901',
+                            project_description: 'Oil well flare gas usage to bitcoin mining using a genset and a containerized data center',
+                            status: 'completed',
+                            created_at: '2025-07-30T01:55:48.955Z',
+                            completed_at: '2025-07-30T02:04:06.876Z'
+                        },
+                        {
+                            id: '912db61a-1cc0-4000-907d-d66336cc118b',
+                            project_description: 'I am building a decentralized finance (DeFi) protocol that enables cross-chain liquidity pools with automated market making. The protocol will use zero-knowledge proofs for privacy-preserving transactions and support multiple blockchain networks including Ethereum, Polygon, and Solana.',
+                            status: 'processing',
+                            created_at: '2025-07-29T19:54:58.243Z'
+                        }
+                    ]);
+                } finally {
+                    setLoading(false);
+                }
+            };
+            
+            const fetchJobDetails = async (jobId) => {
+                setLoading(true);
+                setError(null);
+                try {
+                    const response = await fetch(`${API_BASE}/api/v1/source/${jobId}`);
+                    if (!response.ok) throw new Error('Failed to fetch job details');
+                    const data = await response.json();
+                    setJobDetails(data);
+                    setView('details');
+                } catch (err) {
+                    setError(err.message);
+                    // Use demo data when API fails
+                    if (jobId === '3de1b5cd-7017-4a61-8833-e5f4a6d7d901') {
+                        const demoExperts = [
+                            {
+                                id: 'expert-1',
+                                name: 'John Smith',
+                                title: 'Energy Systems Engineer',
+                                company: 'Bitcoin Mining Solutions Inc',
+                                linkedin_url: 'https://linkedin.com/in/johnsmith',
+                                relevance_score: 0.95,
+                                matching_reasons: ['Direct experience with bitcoin mining using alternative energy sources', 'Expertise in containerized mining operations', 'Published research on energy-efficient mining']
+                            },
+                            {
+                                id: 'expert-2',
+                                name: 'Sarah Johnson',
+                                title: 'Flare Gas Specialist',
+                                company: 'Energy Recovery Systems',
+                                linkedin_url: 'https://linkedin.com/in/sarahjohnson',
+                                relevance_score: 0.92,
+                                matching_reasons: ['Specialist in flare gas capture and utilization technologies', '10+ years in oil & gas industry', 'Experience with gas-to-power projects']
+                            },
+                            {
+                                id: 'expert-3',
+                                name: 'Mike Chen',
+                                title: 'Mining Infrastructure Expert',
+                                company: 'CryptoMine Technologies',
+                                linkedin_url: 'https://linkedin.com/in/mikechen',
+                                relevance_score: 0.88,
+                                matching_reasons: ['Expert in containerized mining infrastructure deployment', 'Remote site operations experience', 'Designed modular mining facilities']
+                            },
+                            {
+                                id: 'expert-4',
+                                name: 'Lisa Wang',
+                                title: 'Oil & Gas Consultant',
+                                company: 'Upstream Energy Advisors',
+                                linkedin_url: 'https://linkedin.com/in/lisawang',
+                                relevance_score: 0.85,
+                                matching_reasons: ['Oil & gas industry connections and regulatory expertise', 'Experience with wellhead equipment', 'Familiar with environmental compliance']
+                            },
+                            {
+                                id: 'expert-5',
+                                name: 'David Brown',
+                                title: 'Containerized Systems Architect',
+                                company: 'Modular Mining Co',
+                                linkedin_url: 'https://linkedin.com/in/davidbrown',
+                                relevance_score: 0.83,
+                                matching_reasons: ['Modular system design for remote locations', 'Power generation expertise', 'Experience with harsh environment deployments']
+                            }
+                        ];
+                        
+                        const demoJob = {
+                            request_id: jobId,
+                            project_description: 'Oil well flare gas usage to bitcoin mining using a genset and a containerized data center',
+                            status: 'completed',
+                            experts: demoExperts,
+                            metadata: {
+                                created_at: '2025-07-30T01:55:48.955Z',
+                                processing_time_seconds: 497.921
+                            }
+                        };
+                        
+                        setJobDetails(demoJob);
+                        setView('details');
+                    } else if (jobId === '912db61a-1cc0-4000-907d-d66336cc118b') {
+                        // Demo data for DeFi job (in progress)
+                        const demoJob = {
+                            request_id: jobId,
+                            project_description: 'I am building a decentralized finance (DeFi) protocol that enables cross-chain liquidity pools with automated market making. The protocol will use zero-knowledge proofs for privacy-preserving transactions and support multiple blockchain networks including Ethereum, Polygon, and Solana.',
+                            status: 'processing',
+                            experts: [
+                                {
+                                    id: 'defi-1',
+                                    name: 'Alex Thompson',
+                                    title: 'DeFi Protocol Architect',
+                                    company: 'CrossChain Labs',
+                                    linkedin_url: 'https://linkedin.com/in/alexthompson-defi',
+                                    relevance_score: 0.94,
+                                    matching_reasons: ['Built 3+ cross-chain DeFi protocols', 'Zero-knowledge proof implementation experience', 'Solidity and Rust expertise']
+                                },
+                                {
+                                    id: 'defi-2',
+                                    name: 'Maria Garcia',
+                                    title: 'Blockchain Security Researcher',
+                                    company: 'CryptoSec Audits',
+                                    linkedin_url: 'https://linkedin.com/in/mariagarcia-blockchain',
+                                    relevance_score: 0.91,
+                                    matching_reasons: ['Audited 50+ DeFi protocols', 'ZK-proof security specialist', 'Published research on AMM vulnerabilities']
+                                }
+                            ],
+                            metadata: {
+                                created_at: '2025-07-29T19:54:58.243Z',
+                                processing_time_seconds: 120 // Still processing
+                            }
+                        };
+                        
+                        setJobDetails(demoJob);
+                        setView('details');
+                    }
+                } finally {
+                    setLoading(false);
+                }
+            };
+            
+            const formatDate = (dateString) => {
+                return new Date(dateString).toLocaleString();
+            };
+            
+            const formatDuration = (seconds) => {
+                const minutes = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${minutes}m ${secs}s`;
+            };
+            
+            return (
+                <div className="container">
+                    <div className="header">
+                        <h1>Expert Contacts Sourcing</h1>
+                        <p>AI-powered expert discovery system</p>
+                    </div>
+                    
+                    <div className="nav">
+                        <button 
+                            className={`nav-button ${view === 'jobs' ? 'active' : ''}`}
+                            onClick={() => setView('jobs')}
+                        >
+                            All Jobs
+                        </button>
+                        {jobDetails && (
+                            <button 
+                                className={`nav-button ${view === 'details' ? 'active' : ''}`}
+                                onClick={() => setView('details')}
+                            >
+                                Job Details
+                            </button>
+                        )}
+                    </div>
+                    
+                    {error && <div className="error">Error: {error}</div>}
+                    
+                    {loading && <div className="loading">Loading...</div>}
+                    
+                    {!loading && view === 'jobs' && (
+                        <JobList jobs={jobs} onSelectJob={setSelectedJob} />
+                    )}
+                    
+                    {!loading && view === 'details' && jobDetails && (
+                        <JobDetails job={jobDetails} />
+                    )}
+                </div>
+            );
+        }
+        
+        function JobList({ jobs, onSelectJob }) {
+            return (
+                <div className="job-list">
+                    <h2 style={{ marginBottom: '20px' }}>Sourcing Jobs</h2>
+                    {jobs.map(job => (
+                        <div key={job.id} className="job-card" onClick={() => onSelectJob(job.id)}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '10px' }}>
+                                <div style={{ flex: 1 }}>
+                                    <h3 style={{ marginBottom: '10px', color: '#374151' }}>
+                                        {job.project_description.substring(0, 100)}
+                                        {job.project_description.length > 100 && '...'}
+                                    </h3>
+                                    <div style={{ color: '#6b7280', fontSize: '14px' }}>
+                                        Created: {new Date(job.created_at).toLocaleString()}
+                                    </div>
+                                    {job.completed_at && (
+                                        <div style={{ color: '#6b7280', fontSize: '14px' }}>
+                                            Completed: {new Date(job.completed_at).toLocaleString()}
+                                        </div>
+                                    )}
+                                </div>
+                                <span className={`job-status ${job.status}`}>
+                                    {job.status}
+                                </span>
+                            </div>
+                            <div style={{ color: '#9ca3af', fontSize: '12px', marginTop: '10px' }}>
+                                ID: {job.id}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            );
+        }
+        
+        function JobDetails({ job }) {
+            const experts = job.experts || [];
+            const sortedExperts = [...experts].sort((a, b) => b.relevance_score - a.relevance_score);
+            
+            return (
+                <div>
+                    <h2 style={{ marginBottom: '20px' }}>Job Results</h2>
+                    
+                    <div className="job-description">
+                        {job.request_id && <div style={{ marginBottom: '10px', fontSize: '12px', color: '#6b7280' }}>ID: {job.request_id}</div>}
+                        <strong>Project Description:</strong> {job.project_description || 'Loading...'}
+                    </div>
+                    
+                    {job.metadata && (
+                        <div className="metadata">
+                            <div>
+                                <strong>Created:</strong> {new Date(job.metadata.created_at).toLocaleString()}
+                            </div>
+                            <div>
+                                <strong>Processing Time:</strong> {Math.round(job.metadata.processing_time_seconds)}s
+                            </div>
+                            <div>
+                                <strong>Experts Found:</strong> {experts.length}
+                            </div>
+                        </div>
+                    )}
+                    
+                    <div className="expert-grid">
+                        {sortedExperts.map((expert, index) => (
+                            <div key={expert.id || index} className="expert-card">
+                                <div className="expert-header">
+                                    <div className="expert-info">
+                                        <h3>
+                                            {expert.linkedin_url ? (
+                                                <a href={expert.linkedin_url} target="_blank" rel="noopener noreferrer">
+                                                    {expert.name}
+                                                </a>
+                                            ) : (
+                                                <span className="no-linkedin">{expert.name}</span>
+                                            )}
+                                        </h3>
+                                        <div className="expert-title">{expert.title}</div>
+                                        <div className="expert-company">{expert.company}</div>
+                                    </div>
+                                    <div className="expert-score">
+                                        {(expert.relevance_score * 100).toFixed(0)}%
+                                    </div>
+                                </div>
+                                
+                                <div className="expert-reasons">
+                                    <h4>Why Relevant:</h4>
+                                    <ul>
+                                        {(Array.isArray(expert.matching_reasons) 
+                                            ? expert.matching_reasons 
+                                            : [expert.matching_reasons || 'Relevant expertise']
+                                        ).map((reason, idx) => (
+                                            <li key={idx}>{reason}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+        
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
