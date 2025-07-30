@@ -65,6 +65,29 @@ if (isCloudRun && cloudSqlConnection) {
 
 export const pool = new Pool(config);
 
+// Test the connection immediately
+pool.query('SELECT 1', (err, result) => {
+  if (err) {
+    logger.error({ 
+      error: {
+        message: err.message,
+        code: (err as any).code,
+        detail: (err as any).detail,
+        host: config.host,
+        database: config.database,
+        user: config.user
+      }
+    }, 'Initial database connection test failed');
+  } else {
+    logger.info({ 
+      host: config.host,
+      database: config.database,
+      user: config.user,
+      testResult: result.rows[0]
+    }, 'Database connection successful');
+  }
+});
+
 // Add connection event listeners for debugging
 pool.on('error', (err) => {
   logger.error({ error: err }, 'Unexpected pool error');

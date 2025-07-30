@@ -103,7 +103,15 @@ router.get('/api/v1/source/:id', async (req: Request, res: Response): Promise<Re
 
     return res.json(response);
   } catch (error) {
-    logger.error({ error }, 'Error retrieving sourcing request');
+    logger.error({ 
+      error: error instanceof Error ? {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+        code: (error as any).code
+      } : error,
+      requestId: req.params.id
+    }, 'Error retrieving sourcing request');
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
