@@ -27,12 +27,14 @@ export class OpenAIService {
       logger.info('Starting generateExpertTypes');
       const systemPrompt = `I am looking for experts to help me validate a topic. Based on the project description, what specific types of experts should I target? For each type, provide a title, a reason ("why") they are relevant, and assign an importance score from 0.0 to 1.0 for each expert type.
       
-      Return your response as a JSON array of objects with the following structure:
-      [{
-        "expert_title": "string",
-        "why": "string",
-        "importance_score": 0.9
-      }]`;
+      Return your response as a JSON object with an "expert_types" array:
+      {
+        "expert_types": [{
+          "expert_title": "string",
+          "why": "string",
+          "importance_score": 0.9
+        }]
+      }`;
 
       const response = await this.client.chat.completions.create({
         model: 'gpt-4o',
@@ -129,6 +131,8 @@ and have PROOF of thought-leadership (articles, talks, open-source tools).
 
   async searchExperts(searchPrompt: string): Promise<SearchCandidate[]> {
     try {
+      logger.info({ searchPrompt }, 'Starting expert search');
+      
       // Note: In production, this would use the o3 model with web search capabilities
       // For now, we'll simulate with GPT-4o
       const systemPrompt = `You are tasked with finding expert candidates based on the provided search criteria. Return a JSON object with a "candidates" array. Each candidate should have the following fields:
