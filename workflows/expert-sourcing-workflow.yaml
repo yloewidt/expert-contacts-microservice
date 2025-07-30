@@ -65,20 +65,20 @@ main:
             value: searchPrompt
             index: i
             in: ${searchPrompts}
-          steps:
-            - callSearch:
-                call: http.post
-                args:
-                  url: ${serviceUrl + "/internal/search-experts"}
-                  body:
-                    search_prompt: ${searchPrompt}
-                  auth:
-                    type: OIDC
-                  timeout: 300
-                result: searchResult
-            - appendSearchResult:
-                assign:
-                  - searchResults: ${list.concat(searchResults, searchResult.body)}
+            steps:
+              - callSearch:
+                  call: http.post
+                  args:
+                    url: ${serviceUrl + "/internal/search-experts"}
+                    body:
+                      search_prompt: ${searchPrompt}
+                    auth:
+                      type: OIDC
+                    timeout: 300
+                  result: searchResult
+              - appendSearchResult:
+                  assign:
+                    - searchResults: ${list.concat(searchResults, searchResult.body)}
                   
     - aggregateResults:
         call: http.post
