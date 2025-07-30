@@ -75,7 +75,7 @@ main:
                         search_prompt: ${searchPrompt}
                       auth:
                         type: OIDC
-                      timeout: 120
+                      timeout: 300
                     result: searchResult
                   except:
                     as: e

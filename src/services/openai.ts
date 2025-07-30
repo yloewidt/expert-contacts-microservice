@@ -19,7 +19,7 @@ export class OpenAIService {
     }, 'Initializing OpenAI client');
     this.client = new OpenAI({
       apiKey: apiKey,
-      timeout: 300000, // 30 second timeout
+      timeout: 300000, // 5 minute timeout
     });
   }
 
@@ -28,7 +28,7 @@ export class OpenAIService {
       logger.info('Starting generateExpertTypes');
       const systemPrompt = `You are an elite expert type identification system for project validation. Your task is to identify hyper-specific expert types that would provide the most valuable insights for validating a given project.
 
-Based on the project description, identify 3-5 distinct expert types. For each expert type, you must provide:
+Based on the project description, identify distinct expert types. For each expert type, you must provide:
 
 1. **expert_title**: A specific, professional title that describes the expert's role and domain expertise. Be precise - avoid generic titles like "Industry Expert" or "Consultant". Examples: "B2B SaaS Growth Marketing Director", "Kubernetes DevOps Lead Engineer", "Healthcare Compliance Attorney".
 
@@ -148,7 +148,7 @@ and have PROOF of thought-leadership (articles, talks, open-source tools).
 ▸ [[ANY ADDITIONAL FOCUSES]].
 
 2. **Short-list 8-12 candidates** who meet the following:
-- Published in the last 3 years on [[TOPIC THEY SHOULD BE EXPERT ON]]
+- Published recently on [[TOPIC THEY SHOULD BE EXPERT ON]]
 - [[DEMONSTRATED HANDS ON EXPERIENCE RELEVANT TO THE TOPIC]]
 
 3. For EACH candidate, return a JSON object with: name, title, company, linkedin_url, email, matching_reasons (as an array of strings), relevancy_to_type_score (a number from 0.0 to 1.0 indicating how well they match this specific expert type), responsiveness, personalised_message, areas_of_expertise (array of 3-5 specific technical/domain areas they are expert in), and conversation_topics (array of 3-5 specific topics we should discuss with them based on our project needs).
@@ -171,7 +171,7 @@ VALIIDATE LINKEDIN LINK.
     "email": "john.doe@example.com",
     "matching_reasons": ["Led the development of a DeFi protocol at ExampleCorp", "Published a paper on zero-knowledge proofs"],
     "relevancy_to_type_score": 0.95,
-    "responsiveness": "High",
+    "responsiveness": 0.8,
     "personalised_message": "A personalized WIIFM-oriented message to get them to consult."
   }
 ]`;
@@ -238,8 +238,7 @@ VALIIDATE LINKEDIN LINK.
                         },
                         relevancy_to_type_score: { type: "number" },
                         responsiveness: { 
-                          type: "string",
-                          enum: ["High", "Medium", "Low"]
+                          type: "number"
                         },
                         personalised_message: { type: "string" },
                         areas_of_expertise: {
@@ -279,6 +278,8 @@ VALIIDATE LINKEDIN LINK.
             }
           ],
           store: true
+        }, {
+          timeout: 300000 // 5 minute timeout for o3 calls
         });
 
         // o3 returns JSON in output_text or in the output array
@@ -304,35 +305,19 @@ VALIIDATE LINKEDIN LINK.
           throw new Error(`No candidates found in response on attempt ${attempt}`);
         }
         
-        // Validate each candidate has required fields
-        const validCandidates = candidates.filter(candidate => 
-          candidate.name && 
-          candidate.title && 
-          candidate.company && 
-          candidate.linkedin_url?.includes('linkedin.com') &&
-          Array.isArray(candidate.matching_reasons) &&
-          candidate.matching_reasons.length >= 2 &&
-          typeof candidate.relevancy_to_type_score === 'number' &&
-          candidate.responsiveness &&
-          candidate.personalised_message &&
-          Array.isArray(candidate.areas_of_expertise) &&
-          candidate.areas_of_expertise.length >= 3 &&
-          Array.isArray(candidate.conversation_topics) &&
-          candidate.conversation_topics.length >= 3
-        );
-        
-        if (validCandidates.length === 0 && attempt < maxRetries) {
+ 
+        if (candidates.length === 0 && attempt < maxRetries) {
           throw new Error(`No valid candidates found, retrying...`);
         }
         
         logger.info({ 
-          candidatesFound: validCandidates.length,
+          candidatesFound: candidates.length,
           totalCandidates: candidates.length,
           attempt,
           usage: response.usage
         }, 'Successfully found expert candidates');
         
-        return validCandidates;
+        return candidates;
         
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
