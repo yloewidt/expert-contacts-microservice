@@ -17,7 +17,7 @@ echo "☁️  Deploying to Cloud Run (this builds in the cloud)..."
   --region us-central1 \
   --allow-unauthenticated \
   --add-cloudsql-instances ideasgenerator:us-central1:expert-contacts-dev \
-  --set-env-vars USE_PUBLIC_IP=true,CLOUD_SQL_CONNECTION_NAME=ideasgenerator:us-central1:expert-contacts-dev,DB_NAME=expert_contacts,DB_USER=app_user,GCP_PROJECT_ID=ideasgenerator,GCP_REGION=us-central1,WORKFLOW_NAME=expert-sourcing-dev,SEARCH_MODEL=gpt-4o \
+  --set-env-vars USE_PUBLIC_IP=true,CLOUD_SQL_CONNECTION_NAME=ideasgenerator:us-central1:expert-contacts-dev,DB_NAME=expert_contacts,DB_USER=app_user,GCP_PROJECT_ID=ideasgenerator,GCP_REGION=us-central1,WORKFLOW_NAME=expert-sourcing-dev,SEARCH_MODEL=o3 \
   --update-secrets DB_PASSWORD=expert-contacts-db-password-dev:latest \
   --update-secrets OPENAI_API_KEY=expert-contacts-openai-key-dev:latest \
   --timeout=10m

@@ -26,25 +26,25 @@ export class OpenAIService {
   async generateExpertTypes(projectDescription: string): Promise<ExpertType[]> {
     try {
       logger.info('Starting generateExpertTypes');
-      const systemPrompt = `I am looking for experts to help me validate a topic. Based on the project description, what specific types of experts should I target? For each type, provide a title, a reason ("why") they are relevant, and assign an importance score from 0.0 to 1.0 for each expert type.
-      
-      Provide 3-5 different expert types that would be valuable for this project.
-      
-      Return your response as a JSON object with an "expert_types" array containing multiple expert objects:
-      {
-        "expert_types": [
-          {
-            "expert_title": "string",
-            "why": "string", 
-            "importance_score": 0.9
-          },
-          {
-            "expert_title": "string",
-            "why": "string",
-            "importance_score": 0.8
-          }
-        ]
-      }`;
+      const systemPrompt = `You are an elite expert type identification system for project validation. Your task is to identify hyper-specific expert types that would provide the most valuable insights for validating a given project.
+
+Based on the project description, identify 3-5 distinct expert types. For each expert type, you must provide:
+
+1. **expert_title**: A specific, professional title that describes the expert's role and domain expertise. Be precise - avoid generic titles like "Industry Expert" or "Consultant". Examples: "B2B SaaS Growth Marketing Director", "Kubernetes DevOps Lead Engineer", "Healthcare Compliance Attorney".
+
+2. **why**: A detailed explanation (2-3 sentences) of why this specific expert type is crucial for validating this project. Explain their unique perspective, what specific insights they could provide, and how their expertise directly relates to critical aspects of the project.
+
+3. **importance_score**: A decimal score between 0.0 and 1.0 indicating how critical this expert type is for project validation. Use this scale:
+   - 0.9-1.0: Absolutely essential - project validation would be incomplete without their input
+   - 0.7-0.8: Very important - their insights would significantly strengthen validation
+   - 0.5-0.6: Valuable - would provide useful perspective but not critical
+   - Below 0.5: Nice to have but not essential
+
+Focus on experts who have:
+- Direct hands-on experience in the specific domain
+- Deep understanding of the target market or technology
+- Practical insights about implementation challenges
+- Knowledge of regulatory, compliance, or industry-specific requirements`;
 
       const response = await this.client.chat.completions.create({
         model: 'gpt-4o',
@@ -52,7 +52,47 @@ export class OpenAIService {
           { role: 'system', content: systemPrompt },
           { role: 'user', content: `Project Description: ${projectDescription}` }
         ],
-        response_format: { type: 'json_object' },
+        response_format: { 
+          type: 'json_schema',
+          json_schema: {
+            name: 'expert_types_response',
+            strict: true,
+            schema: {
+              type: 'object',
+              properties: {
+                expert_types: {
+                  type: 'array',
+                  description: 'Array of expert types identified for project validation',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      expert_title: {
+                        type: 'string',
+                        description: 'Specific professional title describing the expert\'s role and domain'
+                      },
+                      why: {
+                        type: 'string',
+                        description: 'Detailed explanation of why this expert type is valuable for validation'
+                      },
+                      importance_score: {
+                        type: 'number',
+                        description: 'Score from 0.0 to 1.0 indicating how critical this expert is',
+                        minimum: 0,
+                        maximum: 1
+                      }
+                    },
+                    required: ['expert_title', 'why', 'importance_score'],
+                    additionalProperties: false
+                  },
+                  minItems: 3,
+                  maxItems: 5
+                }
+              },
+              required: ['expert_types'],
+              additionalProperties: false
+            }
+          }
+        },
         temperature: 0.7,
       });
 
@@ -118,6 +158,9 @@ and have PROOF of thought-leadership (articles, talks, open-source tools).
 - Find a public email where possible.
 - Cite every claim with a hyperlink inside the matching_reasons.
 
+IMPORTANT:
+VALIIDATE LINKEDIN LINK.
+
 ### EXAMPLE OUTPUT (structure only)
 [
   {
@@ -162,30 +205,6 @@ and have PROOF of thought-leadership (articles, talks, open-source tools).
           model: "o3",
           input: [
             {
-              role: "developer",
-              content: [
-                {
-                  type: "input_text",
-                  text: `You are an elite research assistant and head-hunter tasked with finding expert candidates. 
-                  
-                  You MUST return a JSON object with a "candidates" array containing 8-12 candidates.
-                  
-                  Each candidate MUST have ALL of these fields:
-                  - name: Full name of the expert (string, required)
-                  - title: Current professional title (string, required)
-                  - company: Current company/organization (string, required)
-                  - linkedin_url: LinkedIn profile URL (string, required - must be a valid linkedin.com URL)
-                  - email: Professional email address (string or null)
-                  - matching_reasons: Array of strings explaining why they match, with source citations (array, required, min 2 items)
-                  - relevancy_to_type_score: Score from 0.0 to 1.0 (number, required)
-                  - responsiveness: "High", "Medium", or "Low" (string, required)
-                  - personalised_message: Personalized outreach message (string, required)
-                  
-                  IMPORTANT: All candidates must be real people with verifiable LinkedIn profiles. No fictional examples.`
-                }
-              ]
-            },
-            {
               role: "user",
               content: [
                 {
@@ -197,15 +216,17 @@ and have PROOF of thought-leadership (articles, talks, open-source tools).
           ],
           text: {
             format: {
-              type: "json",
+              type: "json_schema",
+              name: "expert_search_response",
+              strict: true,
               schema: {
-                type: "object",
-                properties: {
-                  candidates: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
+                  type: "object",
+                  properties: {
+                    candidates: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
                         name: { type: "string" },
                         title: { type: "string" },
                         company: { type: "string" },
@@ -222,11 +243,13 @@ and have PROOF of thought-leadership (articles, talks, open-source tools).
                         },
                         personalised_message: { type: "string" }
                       },
-                      required: ["name", "title", "company", "linkedin_url", "matching_reasons", "relevancy_to_type_score", "responsiveness", "personalised_message"]
+                      required: ["name", "title", "company", "linkedin_url", "email", "matching_reasons", "relevancy_to_type_score", "responsiveness", "personalised_message"],
+                      additionalProperties: false
                     }
                   }
                 },
-                required: ["candidates"]
+                required: ["candidates"],
+                additionalProperties: false
               }
             }
           },
@@ -246,12 +269,21 @@ and have PROOF of thought-leadership (articles, talks, open-source tools).
           store: true
         });
 
-        // o3 should return the content directly as JSON when format is specified
-        const result = typeof response.content === 'string' ? JSON.parse(response.content) : response.content;
+        // o3 returns JSON in output_text or in the output array
+        const jsonContent = response.output_text || 
+                          response.output?.find((o: any) => o.type === 'message')?.content?.[0]?.text;
         
-        if (!result) {
+        if (!jsonContent) {
+          logger.error({ 
+            responseKeys: Object.keys(response),
+            hasOutputText: !!response.output_text,
+            hasOutput: !!response.output,
+            outputLength: response.output?.length 
+          }, 'No JSON content found in o3 response');
           throw new Error('No content in response');
         }
+        
+        const result = typeof jsonContent === 'string' ? JSON.parse(jsonContent) : jsonContent;
         
         // Validate the response has candidates
         const candidates = Array.isArray(result) ? result : (result.candidates || result.experts || []);
@@ -273,20 +305,15 @@ and have PROOF of thought-leadership (articles, talks, open-source tools).
           candidate.personalised_message
         );
         
-        if (validCandidates.length < 5) {
-          if (attempt === maxRetries) {
-            logger.warn({ 
-              validCount: validCandidates.length, 
-              totalCount: candidates.length 
-            }, 'Insufficient valid candidates after all attempts');
-            return validCandidates; // Return what we have
-          }
-          throw new Error(`Only ${validCandidates.length} valid candidates found, retrying...`);
+        if (validCandidates.length === 0 && attempt < maxRetries) {
+          throw new Error(`No valid candidates found, retrying...`);
         }
         
         logger.info({ 
           candidatesFound: validCandidates.length,
-          attempt 
+          totalCandidates: candidates.length,
+          attempt,
+          usage: response.usage
         }, 'Successfully found expert candidates');
         
         return validCandidates;
