@@ -19,6 +19,7 @@ export class OpenAIService {
     }, 'Initializing OpenAI client');
     this.client = new OpenAI({
       apiKey: apiKey,
+      timeout: 30000, // 30 second timeout
     });
   }
 

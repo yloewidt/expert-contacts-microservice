@@ -25,6 +25,7 @@ main:
             project_description: ${projectDescription}
           auth:
             type: OIDC
+          timeout: 60
         result: expertTypesResponse
         
     - prepareSearchPrompts:
@@ -46,6 +47,7 @@ main:
                     expert_type: ${expertType}
                   auth:
                     type: OIDC
+                  timeout: 60
                 result: promptResult
             - appendPrompt:
                 assign:
