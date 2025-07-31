@@ -221,7 +221,7 @@ EX-CEO OR A freelance consultant in this spaceshould score high here(0.9-1.0).
 - Cite every claim with a hyperlink inside the matching_reasons.
 
 IMPORTANT:
-VALIIDATE LINKEDIN LINK viability.
+VALIIDATE LINKEDIN LINK viability google searches with site:linkedin.com, check results and URL and conclude on the most likely linkedin url. if you cannot find one. return empty.
 
 ### EXAMPLE OUTPUT (structure only)
 [
@@ -419,7 +419,7 @@ VALIIDATE LINKEDIN LINK viability.
                     name: { type: "string" },
                     title: { type: "string" },
                     company: { type: "string" },
-                    linkedin_url: { type: "string" },
+                    linkedin_url: { type: ["string", "null"] },
                     email: { type: ["string", "null"] },
                     matching_reasons: {
                       type: "array",
