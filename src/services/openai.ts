@@ -193,7 +193,13 @@ and have PROOF of thought-leadership (articles, talks, open-source tools).
 - Published recently on [[TOPIC THEY SHOULD BE EXPERT ON]]
 - [[DEMONSTRATED HANDS ON EXPERIENCE RELEVANT TO THE TOPIC]]
 
-3. For EACH candidate, return a JSON object with: name, title, company, linkedin_url, email, matching_reasons (as an array of strings), relevancy_to_type_score (a number from 0.0 to 1.0 indicating how well they match this specific expert type), responsiveness, personalised_message, areas_of_expertise (array of 3-5 specific technical/domain areas they are expert in), and conversation_topics (array of 3-5 specific topics we should discuss with them based on our project needs).
+3. For EACH candidate, return a JSON object with: name, title, 
+company, linkedin_url, email, matching_reasons (as an array of strings), 
+relevancy_to_type_score (a number from 0.0 to 1.0 indicating how well they match this specific expert type), 
+responsiveness (a number from 0.0 to 1.0 indicating how likely are to respond to a message and have interest in helping the project suceced
+A CEO of a competitive company should score low here(0.01-0.3).
+A freelance consultant in this spaceshould score high here(0.9-1.0).
+), personalised_message, areas_of_expertise (array of 3-5 specific technical/domain areas they are expert in), and conversation_topics (array of 3-5 specific topics we should discuss with them based on our project needs).
 
 ### CONSTRAINTS
 - Individuals only (no brokerages or consulting firms).
@@ -201,7 +207,7 @@ and have PROOF of thought-leadership (articles, talks, open-source tools).
 - Cite every claim with a hyperlink inside the matching_reasons.
 
 IMPORTANT:
-VALIIDATE LINKEDIN LINK.
+VALIIDATE LINKEDIN LINK viability.
 
 ### EXAMPLE OUTPUT (structure only)
 [
@@ -212,8 +218,8 @@ VALIIDATE LINKEDIN LINK.
     "linkedin_url": "https://linkedin.com/in/johndoe",
     "email": "john.doe@example.com",
     "matching_reasons": ["Led the development of a DeFi protocol at ExampleCorp", "Published a paper on zero-knowledge proofs"],
-    "relevancy_to_type_score": 0.95,
-    "responsiveness": 0.8,
+    "relevancy_to_type_score": ...,
+    "responsiveness": ...,
     "personalised_message": "A personalized WIIFM-oriented message to get them to consult."
   }
 ]`;
