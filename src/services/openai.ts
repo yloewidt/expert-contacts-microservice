@@ -48,10 +48,10 @@ Based on the project description, identify distinct expert types. For each exper
 2. **why**: A detailed explanation (2-3 sentences) of why this specific expert type is crucial for validating this project. Explain their unique perspective, what specific insights they could provide, and how their expertise directly relates to critical aspects of the project.
 
 3. **importance_score**: A decimal score between 0.0 and 1.0 indicating how critical this expert type is for project validation. Use this scale:
-   - 0.9-1.0: Absolutely essential - project validation would be incomplete without their input
-   - 0.7-0.8: Very important - their insights would significantly strengthen validation
-   - 0.5-0.6: Valuable - would provide useful perspective but not critical
-   - Below 0.5: Nice to have but not essential
+- 0.9-1.0: Essential Expertiese Expertiese in the specific space and domain.
+- 0.6-0.8: Essential Expertiese in the space, but not in the domain, or in the domain but not in the space
+- 0.4-0.6: Non Essential Expertiese in the specific space and domain.
+- 0.1-0.4: Non Essential Expertiese in the space but not domain or other way around.
 
 Focus on experts who have:
 - Direct hands-on experience in the specific domain
@@ -196,7 +196,7 @@ company, linkedin_url, email, matching_reasons (as an array of strings),
 relevancy_to_type_score (a number from 0.0 to 1.0 indicating how well they match this specific expert type), 
 responsiveness (a number from 0.0 to 1.0 indicating how likely are to respond to a message and have interest in helping the project suceced
 A CEO of a competitive company should score low here(0.01-0.3).
-A freelance consultant in this spaceshould score high here(0.9-1.0).
+EX-CEO OR A freelance consultant in this spaceshould score high here(0.9-1.0).
 ), personalised_message, areas_of_expertise (array of 3-5 specific technical/domain areas they are expert in), and conversation_topics (array of 3-5 specific topics we should discuss with them based on our project needs).
 
 ### CONSTRAINTS
