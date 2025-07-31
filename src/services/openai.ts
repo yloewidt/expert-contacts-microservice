@@ -3,6 +3,22 @@ import { logger } from '../config/logger';
 import { ExpertType, SearchCandidate } from '../types';
 import { Database } from '../models/database';
 
+// Type definitions for better error tracking
+interface AttemptResult {
+  success: boolean;
+  candidates?: SearchCandidate[];
+  error?: string;
+  errorType?: 'timeout' | 'quota_exceeded' | 'no_content' | 'parse_error' | 'validation_error' | 'api_error' | 'network_error';
+  duration: number;
+  usage?: { prompt_tokens: number; completion_tokens: number; total_tokens: number };
+}
+
+interface O3Response {
+  output_text?: string;
+  output?: Array<{ type: string; content?: Array<{ text?: string }> }>;
+  usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number };
+}
+
 export class OpenAIService {
   private client: OpenAI;
   private db: Database;
@@ -261,260 +277,314 @@ VALIIDATE LINKEDIN LINK viability.
     }
   }
 
+
   async searchExperts(searchPrompt: string): Promise<SearchCandidate[]> {
     const maxRetries = 3;
     
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      logger.info({ searchPrompt, attempt, maxRetries }, 'Starting expert search with o3');
+      logger.info({ attempt, maxRetries }, 'Starting expert search with o3');
       
-      const startTime = Date.now();
-      let llmCallId: string | undefined;
+      // Execute attempt and track it
+      const result = await this.executeSearchAttempt(searchPrompt, attempt);
       
-      try {
-        // Track LLM call with attempt number
-        if (this.requestId) {
-          const callInfo = await this.db.incrementLLMCallAttempt(this.requestId, 'o3', 'search_experts');
-          llmCallId = callInfo.id;
-        }
-        const response = await (this.client as any).responses.create({
-          model: "o3",
-          input: [
-            {
-              role: "user",
-              content: [
-                {
-                  type: "input_text",
-                  text: searchPrompt
-                }
-              ]
-            }
-          ],
-          text: {
-            format: {
-              type: "json_schema",
-              name: "expert_search_response",
-              strict: true,
-              schema: {
-                  type: "object",
-                  properties: {
-                    candidates: {
-                      type: "array",
-                      items: {
-                        type: "object",
-                        properties: {
-                        name: { type: "string" },
-                        title: { type: "string" },
-                        company: { type: "string" },
-                        linkedin_url: { type: "string" },
-                        email: { type: ["string", "null"] },
-                        matching_reasons: {
-                          type: "array",
-                          items: { type: "string" }
-                        },
-                        relevancy_to_type_score: { type: "number" },
-                        responsiveness: { 
-                          type: "number"
-                        },
-                        personalised_message: { type: "string" },
-                        areas_of_expertise: {
-                          type: "array",
-                          items: { type: "string" },
-                          minItems: 3,
-                          maxItems: 5
-                        },
-                        conversation_topics: {
-                          type: "array",
-                          items: { type: "string" },
-                          minItems: 3,
-                          maxItems: 5
-                        }
-                      },
-                      required: ["name", "title", "company", "linkedin_url", "email", "matching_reasons", "relevancy_to_type_score", "responsiveness", "personalised_message", "areas_of_expertise", "conversation_topics"],
-                      additionalProperties: false
-                    }
-                  }
-                },
-                required: ["candidates"],
-                additionalProperties: false
-              }
-            }
-          },
-          reasoning: {
-            effort: "medium"
-          },
-          tools: [
-            {
-              type: "web_search_preview",
-              user_location: {
-                type: "approximate",
-                country: "US"
-              },
-              search_context_size: "medium"
-            }
-          ],
-          store: true
-        }, {
-          timeout: 300000 // 5 minute timeout for o3 calls
-        });
-
-        // o3 returns JSON in output_text or in the output array
-        const jsonContent = response.output_text || 
-                          response.output?.find((o: any) => o.type === 'message')?.content?.[0]?.text;
-        
-        if (!jsonContent) {
-          logger.error({ 
-            responseKeys: Object.keys(response),
-            hasOutputText: !!response.output_text,
-            hasOutput: !!response.output,
-            outputLength: response.output?.length 
-          }, 'No JSON content found in o3 response');
-          throw new Error('No content in response');
-        }
-        
-        let result: any;
-        let candidates: SearchCandidate[] = [];
-        
-        try {
-          result = typeof jsonContent === 'string' ? JSON.parse(jsonContent) : jsonContent;
-        } catch (parseError) {
-          const parseErrorMsg = `Failed to parse o3 response: ${parseError instanceof Error ? parseError.message : String(parseError)}`;
-          logger.error({ parseError: parseErrorMsg, jsonContent }, 'JSON parse error');
-          throw new Error(parseErrorMsg);
-        }
-        
-        // Extract candidates from various possible response formats
-        candidates = Array.isArray(result) ? result : (result.candidates || result.experts || []);
-        
-        // Detailed validation with specific error messages
-        if (!Array.isArray(candidates)) {
-          const structureError = `Response does not contain candidates array. Got: ${JSON.stringify(Object.keys(result || {}))}`;
-          logger.error({ responseStructure: result }, structureError);
-          throw new Error(structureError);
-        }
-        
-        if (candidates.length === 0) {
-          const noCandidatesError = `o3 returned empty candidates array on attempt ${attempt}`;
-          logger.warn({ attempt, result }, noCandidatesError);
-          throw new Error(noCandidatesError);
-        }
-        
-        // Validate candidate structure (sample first candidate)
-        if (candidates.length > 0) {
-          const firstCandidate = candidates[0];
-          const missingFields = ['name', 'title', 'company', 'linkedin_url'].filter(
-            field => !firstCandidate[field as keyof SearchCandidate]
-          );
-          if (missingFields.length > 0) {
-            const validationError = `First candidate missing required fields: ${missingFields.join(', ')}`;
-            logger.error({ firstCandidate, missingFields }, validationError);
-            throw new Error(validationError);
-          }
-        }
-        
-        logger.info({ 
-          candidatesFound: candidates.length,
-          totalCandidates: candidates.length,
-          attempt,
-          usage: response.usage
-        }, 'Successfully found expert candidates');
-        
-        // Track success only after all validations pass
-        if (llmCallId && this.requestId) {
-          const duration = Date.now() - startTime;
-          const usage = response.usage;
-          await this.db.updateLLMCall(llmCallId, 'success', duration, undefined,
-            usage ? {
-              prompt_tokens: usage.prompt_tokens || 0,
-              completion_tokens: usage.completion_tokens || 0,
-              total_tokens: usage.total_tokens || 0
-            } : undefined
-          );
-        }
-        
-        return candidates;
-        
-      } catch (error) {
-        const duration = Date.now() - startTime;
-        let errorMessage = error instanceof Error ? error.message : String(error);
-        const errorDetails: Record<string, any> = { attempt, duration_ms: duration };
-        
-        // Extract more details from OpenAI errors
-        if (error instanceof Error && 'response' in error) {
-          const apiError = error as any;
-          errorDetails.status = apiError.response?.status;
-          errorDetails.statusText = apiError.response?.statusText;
-          errorDetails.openai_error = apiError.response?.data?.error;
-          
-          // Build comprehensive error message
-          if (apiError.response?.data?.error?.message) {
-            errorMessage = `OpenAI API Error (${apiError.response.status}): ${apiError.response.data.error.message}`;
-            if (apiError.response?.data?.error?.type) {
-              errorMessage += ` [Type: ${apiError.response.data.error.type}]`;
-            }
-          }
-        } else if (error instanceof Error && 'code' in error) {
-          // Network or other errors
-          const networkError = error as any;
-          errorDetails.error_code = networkError.code;
-          errorMessage = `Network/System Error: ${errorMessage} [Code: ${networkError.code}]`;
-        }
-        
-        // Check for specific error types
-        const errorCode = error instanceof Error && 'code' in error ? (error as any).code : undefined;
-        const errorStatus = error instanceof Error && 'response' in error ? (error as any).response?.status : undefined;
-        
-        const isTimeout = errorMessage.toLowerCase().includes('timeout') || 
-                         errorCode === 'ETIMEDOUT' || 
-                         errorCode === 'ESOCKETTIMEDOUT' ||
-                         duration >= 300000;
-        
-        const isQuotaError = errorMessage.toLowerCase().includes('quota') || 
-                            errorMessage.toLowerCase().includes('rate_limit') ||
-                            errorStatus === 429;
-        
-        if (isQuotaError) {
-          errorMessage = `Quota/Rate Limit Error: ${errorMessage}`;
-          errorDetails.error_type = 'quota_exceeded';
-        } else if (isTimeout) {
-          errorMessage = `Timeout Error: ${errorMessage} (Duration: ${duration}ms)`;
-          errorDetails.error_type = 'timeout';
-        } else {
-          errorDetails.error_type = 'general_error';
-        }
-        
-        logger.error({ 
-          error: errorMessage, 
-          ...errorDetails,
-          searchPromptLength: searchPrompt.length
-        }, 'Expert search attempt failed');
-        
-        // Track failure with detailed error message
-        if (llmCallId && this.requestId) {
-          await this.db.updateLLMCall(
-            llmCallId, 
-            isTimeout ? 'timeout' : 'failed', 
-            duration, 
-            errorMessage
-          );
-        }
-        
-        if (attempt === maxRetries) {
-          logger.error({ 
-            error: errorMessage,
-            totalAttempts: maxRetries,
-            finalErrorDetails: errorDetails
-          }, 'All expert search attempts failed');
-          // Return empty array instead of throwing to prevent workflow failure
-          return [];
-        }
-        
-        // Add exponential backoff for retries
-        const backoffMs = Math.min(5000 * Math.pow(2, attempt - 1), 30000);
-        logger.info(`Retrying in ${backoffMs}ms after error: ${errorMessage}`);
-        await new Promise(resolve => setTimeout(resolve, backoffMs));
+      if (result.success && result.candidates) {
+        return result.candidates;
       }
+      
+      // Check if this is the last attempt
+      if (attempt === maxRetries) {
+        logger.error({
+          finalError: result.error,
+          totalAttempts: maxRetries
+        }, 'All expert search attempts failed');
+        return []; // Return empty array instead of throwing
+      }
+      
+      // Calculate backoff and wait before retry
+      const backoffMs = Math.min(5000 * Math.pow(2, attempt - 1), 30000);
+      logger.info({
+        nextAttempt: attempt + 1,
+        backoffMs,
+        lastError: result.error,
+        errorType: result.errorType
+      }, 'Retrying expert search after backoff');
+      
+      await new Promise(resolve => setTimeout(resolve, backoffMs));
     }
     
     return []; // Should never reach here
+  }
+
+  private async executeSearchAttempt(searchPrompt: string, attemptNumber: number): Promise<AttemptResult> {
+    const startTime = Date.now();
+    let llmCallId: string | undefined;
+    
+    // Start tracking this attempt
+    if (this.requestId) {
+      const callInfo = await this.db.incrementLLMCallAttempt(this.requestId, 'o3', 'search_experts');
+      llmCallId = callInfo.id;
+    }
+    
+    try {
+      // Phase 1: Make the API call
+      const response = await this.callO3API(searchPrompt);
+      
+      // Phase 2: Extract JSON content
+      const jsonContent = this.extractJsonContent(response);
+      
+      // Phase 3: Parse JSON
+      const parsedData = this.parseJsonResponse(jsonContent);
+      
+      // Phase 4: Extract and validate candidates
+      const candidates = this.extractAndValidateCandidates(parsedData, attemptNumber);
+      
+      // Success! Track it
+      const duration = Date.now() - startTime;
+      if (llmCallId && this.requestId) {
+        await this.db.updateLLMCall(llmCallId, 'success', duration, undefined, {
+          prompt_tokens: response.usage?.prompt_tokens || 0,
+          completion_tokens: response.usage?.completion_tokens || 0,
+          total_tokens: response.usage?.total_tokens || 0
+        });
+      }
+      
+      logger.info({
+        attempt: attemptNumber,
+        candidatesFound: candidates.length,
+        duration,
+        usage: response.usage
+      }, 'Expert search attempt succeeded');
+      
+      return {
+        success: true,
+        candidates,
+        duration,
+        usage: response.usage ? {
+          prompt_tokens: response.usage.prompt_tokens || 0,
+          completion_tokens: response.usage.completion_tokens || 0,
+          total_tokens: response.usage.total_tokens || 0
+        } : undefined
+      };
+      
+    } catch (error) {
+      // Handle and track the failure
+      const duration = Date.now() - startTime;
+      const errorResult = this.categorizeError(error, duration);
+      
+      logger.error({
+        attempt: attemptNumber,
+        error: errorResult.error,
+        errorType: errorResult.errorType,
+        duration
+      }, 'Expert search attempt failed');
+      
+      // Track the failure in database
+      if (llmCallId && this.requestId) {
+        const status = errorResult.errorType === 'timeout' ? 'timeout' : 'failed';
+        await this.db.updateLLMCall(llmCallId, status, duration, errorResult.error);
+      }
+      
+      return errorResult;
+    }
+  }
+
+  private async callO3API(searchPrompt: string): Promise<O3Response> {
+    return await (this.client as any).responses.create({
+      model: "o3",
+      input: [{
+        role: "user",
+        content: [{
+          type: "input_text",
+          text: searchPrompt
+        }]
+      }],
+      text: {
+        format: {
+          type: "json_schema",
+          name: "expert_search_response",
+          strict: true,
+          schema: {
+            type: "object",
+            properties: {
+              candidates: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    name: { type: "string" },
+                    title: { type: "string" },
+                    company: { type: "string" },
+                    linkedin_url: { type: "string" },
+                    email: { type: ["string", "null"] },
+                    matching_reasons: {
+                      type: "array",
+                      items: { type: "string" }
+                    },
+                    relevancy_to_type_score: { type: "number" },
+                    responsiveness: { type: "number" },
+                    personalised_message: { type: "string" },
+                    areas_of_expertise: {
+                      type: "array",
+                      items: { type: "string" },
+                      minItems: 3,
+                      maxItems: 5
+                    },
+                    conversation_topics: {
+                      type: "array",
+                      items: { type: "string" },
+                      minItems: 3,
+                      maxItems: 5
+                    }
+                  },
+                  required: ["name", "title", "company", "linkedin_url", "email", "matching_reasons", 
+                            "relevancy_to_type_score", "responsiveness", "personalised_message", 
+                            "areas_of_expertise", "conversation_topics"],
+                  additionalProperties: false
+                }
+              }
+            },
+            required: ["candidates"],
+            additionalProperties: false
+          }
+        }
+      },
+      reasoning: { effort: "medium" },
+      tools: [{
+        type: "web_search_preview",
+        user_location: { type: "approximate", country: "US" },
+        search_context_size: "medium"
+      }],
+      store: true
+    }, {
+      timeout: 300000 // 5 minute timeout
+    });
+  }
+
+  private extractJsonContent(response: O3Response): string {
+    const jsonContent = response.output_text || 
+                       response.output?.find(o => o.type === 'message')?.content?.[0]?.text;
+    
+    if (!jsonContent) {
+      logger.error({
+        responseKeys: Object.keys(response),
+        hasOutputText: !!response.output_text,
+        hasOutput: !!response.output,
+        outputLength: response.output?.length
+      }, 'No JSON content found in o3 response');
+      
+      throw new Error('NO_CONTENT: o3 response contained no JSON content');
+    }
+    
+    return jsonContent;
+  }
+
+  private parseJsonResponse(jsonContent: string): any {
+    try {
+      return typeof jsonContent === 'string' ? JSON.parse(jsonContent) : jsonContent;
+    } catch (parseError) {
+      const errorMsg = parseError instanceof Error ? parseError.message : String(parseError);
+      logger.error({
+        parseError: errorMsg,
+        contentPreview: jsonContent.substring(0, 200)
+      }, 'Failed to parse o3 JSON response');
+      
+      throw new Error(`PARSE_ERROR: Failed to parse JSON - ${errorMsg}`);
+    }
+  }
+
+  private extractAndValidateCandidates(parsedData: any, attemptNumber: number): SearchCandidate[] {
+    // Extract candidates array from various possible formats
+    const candidates = Array.isArray(parsedData) ? parsedData : 
+                      (parsedData.candidates || parsedData.experts || []);
+    
+    // Validate it's an array
+    if (!Array.isArray(candidates)) {
+      const error = `VALIDATION_ERROR: Response does not contain candidates array. Got keys: ${JSON.stringify(Object.keys(parsedData || {}))}`;
+      logger.error({
+        responseStructure: parsedData,
+        attempt: attemptNumber
+      }, error);
+      throw new Error(error);
+    }
+    
+    // Check if empty
+    if (candidates.length === 0) {
+      const error = `VALIDATION_ERROR: o3 returned empty candidates array on attempt ${attemptNumber}`;
+      logger.warn({
+        attempt: attemptNumber,
+        parsedData
+      }, error);
+      throw new Error(error);
+    }
+    
+    // Validate first candidate structure as a sample
+    const firstCandidate = candidates[0];
+    const requiredFields = ['name', 'title', 'company', 'linkedin_url'];
+    const missingFields = requiredFields.filter(field => !firstCandidate[field]);
+    
+    if (missingFields.length > 0) {
+      const error = `VALIDATION_ERROR: First candidate missing required fields: ${missingFields.join(', ')}`;
+      logger.error({
+        firstCandidate,
+        missingFields,
+        attempt: attemptNumber
+      }, error);
+      throw new Error(error);
+    }
+    
+    return candidates;
+  }
+
+  private categorizeError(error: unknown, duration: number): AttemptResult {
+    let errorMessage = error instanceof Error ? error.message : String(error);
+    let errorType: AttemptResult['errorType'] = 'api_error';
+    
+    // Check for our custom error prefixes
+    if (errorMessage.startsWith('NO_CONTENT:')) {
+      errorType = 'no_content';
+    } else if (errorMessage.startsWith('PARSE_ERROR:')) {
+      errorType = 'parse_error';
+    } else if (errorMessage.startsWith('VALIDATION_ERROR:')) {
+      errorType = 'validation_error';
+    } else if (error instanceof Error) {
+      // Check for API errors
+      if ('response' in error) {
+        const apiError = error as any;
+        const status = apiError.response?.status;
+        const apiMessage = apiError.response?.data?.error?.message;
+        
+        if (status === 429 || apiMessage?.includes('quota') || apiMessage?.includes('rate_limit')) {
+          errorType = 'quota_exceeded';
+          errorMessage = `Quota/Rate Limit Error (${status}): ${apiMessage || errorMessage}`;
+        } else {
+          errorMessage = `OpenAI API Error (${status}): ${apiMessage || errorMessage}`;
+        }
+      } 
+      // Check for network errors
+      else if ('code' in error) {
+        const networkError = error as any;
+        const code = networkError.code;
+        
+        if (code === 'ETIMEDOUT' || code === 'ESOCKETTIMEDOUT' || duration >= 300000) {
+          errorType = 'timeout';
+          errorMessage = `Timeout Error: ${errorMessage} [Code: ${code}] (Duration: ${duration}ms)`;
+        } else {
+          errorType = 'network_error';
+          errorMessage = `Network Error: ${errorMessage} [Code: ${code}]`;
+        }
+      }
+    }
+    
+    // Check for timeout based on duration or message
+    if (duration >= 300000 || errorMessage.toLowerCase().includes('timeout')) {
+      errorType = 'timeout';
+    }
+    
+    return {
+      success: false,
+      error: errorMessage,
+      errorType,
+      duration
+    };
   }
 }
