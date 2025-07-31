@@ -321,8 +321,13 @@ VALIIDATE LINKEDIN LINK viability.
     
     // Start tracking this attempt
     if (this.requestId) {
-      const callInfo = await this.db.incrementLLMCallAttempt(this.requestId, 'o3', 'search_experts');
-      llmCallId = callInfo.id;
+      // For first attempt, use createLLMCall. For retries, use incrementLLMCallAttempt
+      if (attemptNumber === 1) {
+        llmCallId = await this.db.createLLMCall(this.requestId, 'o3', 'search_experts');
+      } else {
+        const callInfo = await this.db.incrementLLMCallAttempt(this.requestId, 'o3', 'search_experts');
+        llmCallId = callInfo.id;
+      }
     }
     
     try {
