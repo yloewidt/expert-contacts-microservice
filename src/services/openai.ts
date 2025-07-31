@@ -519,7 +519,7 @@ VALIIDATE LINKEDIN LINK viability.
     
     // Validate first candidate structure as a sample
     const firstCandidate = candidates[0];
-    const requiredFields = ['name', 'title', 'company', 'linkedin_url'];
+    const requiredFields = ['name', 'title', 'company'];
     const missingFields = requiredFields.filter(field => !firstCandidate[field]);
     
     if (missingFields.length > 0) {
