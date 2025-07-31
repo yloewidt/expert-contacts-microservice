@@ -340,8 +340,17 @@ export class Database {
   }
 
   async getLLMMetrics(requestId: string): Promise<LLMMetrics | null> {
-    const query = `SELECT calculate_llm_metrics($1) as metrics`;
-    const result = await pool.query(query, [requestId]);
-    return result.rows[0].metrics;
+    try {
+      const query = `SELECT calculate_llm_metrics($1) as metrics`;
+      const result = await pool.query(query, [requestId]);
+      return result.rows[0].metrics;
+    } catch (error: any) {
+      // If function doesn't exist, return null
+      if (error.code === '42883') {
+        console.warn('calculate_llm_metrics function not found, returning null');
+        return null;
+      }
+      throw error;
+    }
   }
 }
