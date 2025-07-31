@@ -10,8 +10,9 @@ COPY tsconfig.json ./
 # Install dependencies
 RUN npm ci
 
-# Copy source code
+# Copy source code and migrations
 COPY src ./src
+COPY migrations ./migrations
 
 # Build the application
 RUN npm run build
@@ -37,6 +38,7 @@ RUN npm ci --production && \
 
 # Copy built application from builder stage
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/migrations ./migrations
 
 # Copy startup script
 COPY run.sh ./
