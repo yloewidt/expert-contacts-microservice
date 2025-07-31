@@ -11,6 +11,7 @@ import adminRoute from './api/adminRoute';
 import testDbRoute from './api/testDbRoute';
 import debugRoute from './api/debugRoute';
 import migrationRoute from './api/migrationRoute';
+import simpleMigrationRoute from './api/simpleMigrationRoute';
 
 // Load environment variables
 dotenv.config();
@@ -69,6 +70,7 @@ app.use('/admin', adminRoute);
 app.use('/test', testDbRoute);
 app.use('/debug', debugRoute);
 app.use('/migration', migrationRoute);
+app.use('/fix', simpleMigrationRoute);
 
 // Error handling
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
