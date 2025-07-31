@@ -13,6 +13,7 @@ import debugRoute from './api/debugRoute';
 import migrationRoute from './api/migrationRoute';
 import simpleMigrationRoute from './api/simpleMigrationRoute';
 import createLLMTableRoute from './api/createLLMTableRoute';
+import fixLLMMetricsRoute from './api/fixLLMMetricsRoute';
 
 // Load environment variables
 dotenv.config();
@@ -73,6 +74,7 @@ app.use('/debug', debugRoute);
 app.use('/migration', migrationRoute);
 app.use('/fix', simpleMigrationRoute);
 app.use('/fix', createLLMTableRoute);
+app.use('/fix', fixLLMMetricsRoute);
 
 // Error handling
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

@@ -96,9 +96,7 @@ Focus on experts who have:
                     },
                     required: ['expert_title', 'why', 'importance_score'],
                     additionalProperties: false
-                  },
-                  minItems: 3,
-                  maxItems: 5
+                  }
                 }
               },
               required: ['expert_types'],
