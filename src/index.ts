@@ -7,6 +7,7 @@ import apiRoutes from './api/routes';
 import internalRoutes from './api/internalRoutes';
 import jobsRoute from './api/jobsRoute';
 import dbTestRoute from './api/dbTestRoute';
+import adminRoute from './api/adminRoute';
 
 // Load environment variables
 dotenv.config();
@@ -61,6 +62,7 @@ app.use('/', apiRoutes);
 app.use('/', internalRoutes);
 app.use('/', jobsRoute);
 app.use('/', dbTestRoute);
+app.use('/admin', adminRoute);
 
 // Error handling
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
