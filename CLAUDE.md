@@ -2,6 +2,28 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Environments
+
+### Development Environment
+- **Cloud Run Service**: https://expert-contacts-service-efikrlpu3q-uc.a.run.app
+- **Database**: expert-contacts-dev (Cloud SQL, IP: 34.121.141.137)
+- **Workflow**: expert-sourcing-dev
+- **Cloud Tasks Queue**: expert-sourcing-dev
+- **Secrets**: 
+  - `expert-contacts-openai-key-dev` - OpenAI API key
+  - `expert-contacts-db-password-dev` - Database password
+
+### Production Environment  
+- **Database**: expert-contacts-prod (Cloud SQL, IP: 34.63.118.13)
+- **Workflow**: expert-sourcing-workflow
+- **Note**: Currently the Cloud Run service is configured to use the development database and workflow
+
+### Configuration
+The Cloud Run service uses environment variables and secrets:
+- `CLOUD_SQL_CONNECTION_NAME`: Points to the Cloud SQL instance
+- `OPENAI_API_KEY`: Retrieved from Google Secret Manager
+- `DB_*`: Database connection parameters
+
 ## Product Specification
 
 See [PRODUCT_SPEC.md](./PRODUCT_SPEC.md) for the complete product specification, including:
