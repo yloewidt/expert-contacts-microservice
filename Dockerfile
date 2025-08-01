@@ -17,6 +17,8 @@ COPY migrations ./migrations
 # Build the application
 RUN npm run build
 
+# The UI files are already in src/ui and should be copied by npm run build
+
 # Production stage
 FROM node:20-alpine
 
