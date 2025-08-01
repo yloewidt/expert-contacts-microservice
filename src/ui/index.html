@@ -174,12 +174,39 @@
             100% { opacity: 1; }
         }
         
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            background: #10b981;
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+            z-index: 2000;
+            font-weight: 500;
+        }
+        
+        .notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .notification.error {
+            background: #ef4444;
+        }
+        
         .llm-metrics-popup {
             position: absolute;
             top: 100%;
             left: 0;
             margin-top: 10px;
-            background: white;
+            background: rgba(31, 41, 55, 0.98);
+            backdrop-filter: blur(10px);
+            color: white;
             border-radius: 10px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             padding: 20px;
@@ -195,6 +222,10 @@
             opacity: 1;
             visibility: visible;
             transform: translateY(0);
+        }
+        
+        .llm-metrics-popup h3 {
+            color: white;
         }
         
         .metrics-grid {
@@ -645,6 +676,14 @@
             const [jobDetails, setJobDetails] = useState(null);
             const [loading, setLoading] = useState(false);
             const [error, setError] = useState(null);
+            const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
+            
+            const showNotification = (message, type = 'success') => {
+                setNotification({ show: true, message, type });
+                setTimeout(() => {
+                    setNotification({ show: false, message: '', type: 'success' });
+                }, 3000);
+            };
             
             useEffect(() => {
                 if (view === 'jobs') {
@@ -818,9 +857,12 @@
                     }
                     
                     const result = await response.json();
-                    alert(`Job created successfully! ID: ${result.request_id}`);
+                    showNotification(`Job created successfully! ID: ${result.request_id}`);
                     setView('jobs');
-                    loadJobs();
+                    // Reload jobs after a short delay to ensure the new job is indexed
+                    setTimeout(() => {
+                        loadJobs();
+                    }, 1000);
                 } catch (error) {
                     setError(error.message);
                 } finally {
@@ -845,6 +887,10 @@
                         </button>
                     </div>
                     
+                    <div className={`notification ${notification.type} ${notification.show ? 'show' : ''}`}>
+                        {notification.message}
+                    </div>
+                    
                     {error && <div className="error">Error: {error}</div>}
                     
                     {loading && <div className="loading">Loading...</div>}
@@ -854,7 +900,7 @@
                     )}
                     
                     {!loading && view === 'details' && jobDetails && (
-                        <JobDetails job={jobDetails} />
+                        <JobDetails job={jobDetails} showNotification={showNotification} />
                     )}
                     
                     {!loading && view === 'create' && (
@@ -898,7 +944,7 @@
             );
         }
         
-        function JobDetails({ job }) {
+        function JobDetails({ job, showNotification }) {
             const [selectedExpertType, setSelectedExpertType] = useState('all');
             const experts = job.experts || [];
             
@@ -944,13 +990,11 @@
                             <div>
                                 <strong>Experts Found:</strong> {experts.length}
                             </div>
-                        </div>
-                    )}
-                    
-                    {job.llm_metrics && (
-                        <div className="llm-status-indicator">
-                            <div className={`llm-status-dot ${llmStatus.status}`}></div>
-                            <span>LLM Status: {llmStatus.label}</span>
+                            {job.llm_metrics && (
+                                <div style={{ marginTop: '5px', position: 'relative' }}>
+                                    <div className="llm-status-indicator" style={{ position: 'relative', display: 'inline-block' }}>
+                                        <div className={`llm-status-dot ${llmStatus.status}`}></div>
+                                        <span>LLM Status: {llmStatus.label}</span>
                             
                             <div className="llm-metrics-popup">
                                 <h3 style={{ marginBottom: '15px', fontSize: '16px' }}>LLM Call Metrics</h3>
@@ -1002,7 +1046,9 @@
                                         </table>
                                     </div>
                                 )}
-                            </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                     
@@ -1152,14 +1198,32 @@
                                 
                                 {expert.personalised_message && (
                                     <div className="expert-actions">
-                                        <details>
-                                            <summary className="source-link" style={{ cursor: 'pointer' }}>
-                                                View Personalized Message
-                                            </summary>
-                                            <p style={{ marginTop: '10px', fontSize: '14px', color: '#6b7280' }}>
-                                                {expert.personalised_message}
+                                        <div className="personalized-message-preview">
+                                            <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '10px' }}>
+                                                {expert.personalised_message.substring(0, 100)}...
                                             </p>
-                                        </details>
+                                            <button 
+                                                className="copy-button"
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(expert.personalised_message);
+                                                    showNotification('Personalized message copied to clipboard!');
+                                                }}
+                                                style={{
+                                                    padding: '6px 12px',
+                                                    background: '#3b82f6',
+                                                    color: 'white',
+                                                    border: 'none',
+                                                    borderRadius: '6px',
+                                                    cursor: 'pointer',
+                                                    fontSize: '14px',
+                                                    transition: 'background 0.2s ease'
+                                                }}
+                                                onMouseOver={(e) => e.target.style.background = '#2563eb'}
+                                                onMouseOut={(e) => e.target.style.background = '#3b82f6'}
+                                            >
+                                                Copy Full Message
+                                            </button>
+                                        </div>
                                     </div>
                                 )}
                             </div>

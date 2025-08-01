@@ -6,6 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Development Environment
 - **Cloud Run Service**: https://expert-contacts-service-efikrlpu3q-uc.a.run.app
+  - Note: Cloud Run may show different URL formats (e.g., with numeric suffixes) but they all point to the same service
 - **Database**: expert-contacts-dev (Cloud SQL, IP: 34.121.141.137)
 - **Workflow**: expert-sourcing-dev
 - **Cloud Tasks Queue**: expert-sourcing-dev
