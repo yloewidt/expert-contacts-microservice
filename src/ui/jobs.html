@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expert Sourcing Jobs - Expert Contacts</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --background: #f9fafb;
+            --surface: #ffffff;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --border: #e5e7eb;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--background);
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+
+        /* Header */
+        .header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 16px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border: none;
+            background: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .page-title {
+            font-size: 2.25rem;
+            font-weight: 700;
+        }
+
+        /* Jobs Grid */
+        .jobs-grid {
+            display: grid;
+            gap: 16px;
+        }
+
+        .job-card {
+            background: var(--surface);
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .job-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-1px);
+        }
+
+        .job-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 16px;
+        }
+
+        .job-description {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            flex: 1;
+            margin-right: 16px;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .status-completed {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .status-processing {
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+        }
+
+        .status-pending {
+            background: rgba(107, 114, 128, 0.1);
+            color: var(--text-secondary);
+        }
+
+        .status-failed {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error);
+        }
+
+        .job-metadata {
+            display: flex;
+            gap: 24px;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .metadata-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 48px;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 3px solid var(--border);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 64px 24px;
+        }
+
+        .empty-state-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .empty-state-description {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .container {
+                padding: 24px 16px;
+            }
+            .page-header {
+                flex-direction: column;
+                gap: 16px;
+                align-items: stretch;
+            }
+            .job-header {
+                flex-direction: column;
+                gap: 12px;
+            }
+            .job-metadata {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">Expert Contacts</a>
+            <nav class="header-nav">
+                <a href="/new-job.html" class="btn btn-primary">+ New Request</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="page-header">
+            <h1 class="page-title">Expert Sourcing Jobs</h1>
+            <button class="btn" onclick="loadJobs()">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Refresh
+            </button>
+        </div>
+
+        <div id="jobs-container" class="jobs-grid">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p style="margin-top: 16px;">Loading jobs...</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Format duration
+        function formatDuration(seconds) {
+            if (!seconds || seconds === 0) return 'Just started';
+            if (seconds < 60) return `${Math.round(seconds)}s`;
+            if (seconds < 3600) return `${Math.round(seconds / 60)}m`;
+            return `${Math.round(seconds / 3600)}h ${Math.round((seconds % 3600) / 60)}m`;
+        }
+
+        // Render job card
+        function renderJobCard(job) {
+            const processingTime = job.metadata?.processing_time_seconds || 0;
+            const expertCount = job.experts?.length || 0;
+            
+            // Truncate description to 80 chars
+            const truncatedDescription = job.project_description.length > 80 
+                ? job.project_description.substring(0, 80) + '...' 
+                : job.project_description;
+
+            return `
+                <a href="/job-details.html?id=${job.id}" class="job-card">
+                    <div class="job-header">
+                        <div class="job-description" title="${job.project_description}">${truncatedDescription}</div>
+                        <span class="status-badge status-${job.status}">${job.status}</span>
+                    </div>
+                    <div class="job-metadata">
+                        <div class="metadata-item">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            ${formatDate(job.metadata?.created_at)}
+                        </div>
+                        ${processingTime > 0 ? `
+                            <div class="metadata-item">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                ${formatDuration(processingTime)}
+                            </div>
+                        ` : ''}
+                        ${expertCount > 0 ? `
+                            <div class="metadata-item">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                                ${expertCount} experts
+                            </div>
+                        ` : ''}
+                    </div>
+                </a>
+            `;
+        }
+
+        // Load jobs
+        async function loadJobs() {
+            const container = document.getElementById('jobs-container');
+            container.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 16px;">Loading jobs...</p>
+                </div>
+            `;
+
+            try {
+                const response = await fetch('/api/v1/jobs');
+                const data = await response.json();
+                
+                if (!data.jobs || data.jobs.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <h3 class="empty-state-title">No sourcing jobs yet</h3>
+                            <p class="empty-state-description">Create your first expert sourcing request to get started.</p>
+                            <a href="/new-job.html" class="btn btn-primary">Create New Request</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = data.jobs.map(job => renderJobCard(job)).join('');
+            } catch (error) {
+                console.error('Failed to load jobs:', error);
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3 class="empty-state-title">Failed to load jobs</h3>
+                        <p class="empty-state-description">${error.message}</p>
+                        <button class="btn btn-primary" onclick="loadJobs()">Try Again</button>
+                    </div>
+                `;
+            }
+        }
+
+        // Load jobs on page load
+        loadJobs();
+
+        // Auto-refresh every 30 seconds
+        setInterval(loadJobs, 30000);
+    </script>
+</body>
+</html>

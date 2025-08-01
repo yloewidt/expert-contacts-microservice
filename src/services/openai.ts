@@ -222,6 +222,9 @@ EX-CEO OR A freelance consultant in this spaceshould score high here(0.9-1.0).
 
 IMPORTANT:
 VALIIDATE LINKEDIN LINK viability google searches with site:linkedin.com, check results and URL and conclude on the most likely linkedin url. if you cannot find one. return empty.
+When you find a target person look them up on using the following format:
+[Person Name] [Additional information they might include in their profile] site:linkedin.com
+Then if you identify the person profile in the results, use the URL from the results AS IS.
 
 ### EXAMPLE OUTPUT (structure only)
 [

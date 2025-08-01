@@ -232,8 +232,8 @@ export class Database {
     const id = uuidv4();
     const query = `
       INSERT INTO experts (id, name, title, company, linkedin_url, email, created_at, updated_at)
-      VALUES ($1, $2, $3, $4, COALESCE($5, ''), $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-      ON CONFLICT (linkedin_url) 
+      VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      ON CONFLICT (linkedin_url) WHERE linkedin_url IS NOT NULL
       DO UPDATE SET 
         name = EXCLUDED.name,
         title = EXCLUDED.title,

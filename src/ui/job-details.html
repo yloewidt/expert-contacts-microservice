@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Details - Expert Contacts</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --background: #f9fafb;
+            --surface: #ffffff;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --border: #e5e7eb;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--background);
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+
+        /* Header */
+        .header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border: none;
+            background: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background: var(--surface);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--background);
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            margin-bottom: 24px;
+            font-size: 0.875rem;
+        }
+
+        .back-link:hover {
+            color: var(--text-primary);
+        }
+
+        /* Job Header */
+        .job-header {
+            background: var(--surface);
+            border-radius: 8px;
+            padding: 32px;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 32px;
+        }
+
+        .job-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .job-status {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .status-badge {
+            padding: 6px 16px;
+            border-radius: 100px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .status-completed {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+        }
+
+        .job-metadata {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+        }
+
+        .metadata-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .metadata-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .metadata-value {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        /* Filter Section */
+        .filter-section {
+            margin-bottom: 32px;
+        }
+
+        .filter-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .filter-pills {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .filter-pill {
+            padding: 8px 16px;
+            border-radius: 100px;
+            font-size: 0.875rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .filter-pill:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .filter-pill.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* Experts List */
+        .experts-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .expert-card {
+            background: var(--surface);
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            gap: 24px;
+            align-items: start;
+        }
+
+        .expert-left {
+            flex: 0 0 300px;
+        }
+
+        .expert-middle {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .expert-right {
+            flex: 0 0 auto;
+        }
+
+        .expert-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+
+        .expert-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .relevance-score {
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+            padding: 4px 12px;
+            border-radius: 100px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .expert-info {
+            margin-bottom: 12px;
+        }
+
+        .expert-title {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .expert-company {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .expert-linkedin {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 0.875rem;
+            margin-top: 8px;
+        }
+
+        .expert-linkedin:hover {
+            text-decoration: underline;
+        }
+
+        .expertise-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .expertise-tag {
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+            padding: 4px 12px;
+            border-radius: 100px;
+            font-size: 0.75rem;
+        }
+
+        .matching-reasons {
+            margin-top: 16px;
+        }
+
+        .matching-reasons-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .matching-reasons-list {
+            list-style: none;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .matching-reasons-list li {
+            position: relative;
+            padding-left: 20px;
+            margin-bottom: 6px;
+        }
+
+        .matching-reasons-list li:before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        .expert-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 48px;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 3px solid var(--border);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* LLM Stats Tooltip */
+        .llm-stats-tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .llm-stats-panel {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin-top: 8px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: var(--shadow-md);
+            z-index: 10;
+            min-width: 300px;
+            display: none;
+        }
+
+        .llm-stats-tooltip:hover .llm-stats-panel {
+            display: block;
+        }
+
+        .llm-stats-title {
+            font-weight: 600;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .llm-stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            font-size: 0.875rem;
+        }
+
+        .llm-stat-label {
+            color: var(--text-secondary);
+        }
+
+        .llm-stat-value {
+            font-weight: 500;
+        }
+
+        /* Score Card */
+        .score-card {
+            background: var(--background);
+            border-radius: 6px;
+            padding: 16px;
+            margin-left: 16px;
+            min-width: 180px;
+        }
+
+        .score-card-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .score-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 0.875rem;
+        }
+
+        .score-item.final {
+            font-weight: 600;
+            padding-top: 8px;
+            border-top: 1px solid var(--border);
+            margin-top: 8px;
+        }
+
+        .score-label {
+            color: var(--text-secondary);
+        }
+
+        .score-item.final .score-label {
+            color: var(--text-primary);
+        }
+
+        .score-value {
+            font-weight: 500;
+        }
+
+        .score-item.final .score-value {
+            color: var(--primary);
+            font-size: 1rem;
+        }
+
+        /* Email Display */
+        .expert-email {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-top: 2px;
+        }
+
+        .expert-email.missing {
+            color: var(--warning);
+            font-style: italic;
+        }
+
+        /* Message Snippet */
+        .message-snippet {
+            margin-top: 16px;
+            padding: 12px;
+            background: var(--background);
+            border-radius: 6px;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .message-snippet:hover {
+            background: rgba(37, 99, 235, 0.05);
+            color: var(--text-primary);
+        }
+
+        .message-snippet::after {
+            content: '📋 Click to copy';
+            position: absolute;
+            right: 8px;
+            top: 8px;
+            font-size: 0.75rem;
+            color: var(--primary);
+            opacity: 0;
+            transition: opacity 0.15s ease;
+        }
+
+        .message-snippet:hover::after {
+            opacity: 1;
+        }
+
+        .message-snippet.copied::after {
+            content: '✓ Copied!';
+            color: var(--success);
+            opacity: 1;
+        }
+
+        /* Clickable Name */
+        .expert-name-link {
+            color: inherit;
+            text-decoration: none;
+            transition: color 0.15s ease;
+        }
+
+        .expert-name-link:hover {
+            color: var(--primary);
+        }
+
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .expert-card {
+                flex-direction: column;
+                gap: 16px;
+            }
+            .expert-left {
+                flex: 1 1 auto;
+            }
+            .expert-right {
+                width: 100%;
+            }
+            .score-card {
+                margin-left: 0;
+                margin-bottom: 16px;
+            }
+            .expert-actions {
+                flex-direction: row;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 24px 16px;
+            }
+            .job-header {
+                padding: 24px 16px;
+            }
+            .job-metadata {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">Expert Contacts</a>
+            <nav class="header-nav">
+                <a href="/new-job.html" class="btn btn-primary">+ New Request</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <a href="/jobs.html" class="back-link">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Jobs
+        </a>
+
+        <div id="job-content">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p style="margin-top: 16px;">Loading job details...</p>
+            </div>
+        </div>
+    </main>
+
+
+    <script>
+        // Get job ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const jobId = urlParams.get('id');
+
+        if (!jobId) {
+            window.location.href = '/jobs.html';
+        }
+
+        // Current filter
+        let selectedExpertType = null;
+        let currentExperts = [];
+        let currentMessage = '';
+
+        // Format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Format duration
+        function formatDuration(seconds) {
+            if (!seconds || seconds === 0) return 'Just started';
+            if (seconds < 60) return `${Math.round(seconds)}s`;
+            if (seconds < 3600) return `${Math.round(seconds / 60)}m`;
+            return `${Math.round(seconds / 3600)}h ${Math.round((seconds % 3600) / 60)}m`;
+        }
+
+        // Copy to clipboard
+        async function copyToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                return true;
+            } catch (err) {
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    return true;
+                } catch (err) {
+                    document.body.removeChild(textArea);
+                    return false;
+                }
+            }
+        }
+
+
+        // Copy message snippet
+        async function copyMessage(message, element) {
+            const success = await copyToClipboard(message);
+            if (success) {
+                element.classList.add('copied');
+                setTimeout(() => {
+                    element.classList.remove('copied');
+                }, 2000);
+            }
+        }
+
+        // Show reason source (placeholder - would need actual source data)
+        function showReasonSource(reason, index) {
+            alert(`Source for: "${reason}"\n\nThis would show the source/context where this matching reason was found. The actual implementation would require source data from the backend.`);
+        }
+
+        // Filter experts
+        function filterExperts(type) {
+            selectedExpertType = type;
+            renderExperts();
+        }
+
+        // Render experts
+        function renderExperts() {
+            const expertsToShow = selectedExpertType
+                ? currentExperts.filter(e => e.expert_type === selectedExpertType)
+                : currentExperts;
+
+            const expertsHtml = expertsToShow.map((expert, idx) => {
+                // Get message snippet (first 150 chars)
+                const messageSnippet = expert.personalised_message 
+                    ? expert.personalised_message.substring(0, 150) + (expert.personalised_message.length > 150 ? '...' : '')
+                    : 'No personalized message available';
+                
+                return `
+                <div class="expert-card">
+                    <div class="expert-left">
+                        <div class="expert-header">
+                            ${expert.linkedin_url ? `
+                                <a href="${expert.linkedin_url}" target="_blank" rel="noopener noreferrer" class="expert-name-link">
+                                    <h3 class="expert-name">${expert.name}</h3>
+                                </a>
+                            ` : `
+                                <h3 class="expert-name">${expert.name}</h3>
+                            `}
+                        </div>
+                        <div class="expert-info">
+                            <div class="expert-title">${expert.title}</div>
+                            <div class="expert-company">${expert.company}</div>
+                            <div class="expert-email ${!expert.email ? 'missing' : ''}">
+                                ${expert.email || 'Email not available'}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="expert-middle">
+                        ${expert.areas_of_expertise && expert.areas_of_expertise.length > 0 ? `
+                            <div class="expertise-tags">
+                                ${expert.areas_of_expertise.map(area => 
+                                    `<span class="expertise-tag">${area}</span>`
+                                ).join('')}
+                            </div>
+                        ` : ''}
+                        ${expert.matching_reasons && expert.matching_reasons.length > 0 ? `
+                            <div class="matching-reasons">
+                                <div class="matching-reasons-title">Why they match:</div>
+                                <ul class="matching-reasons-list">
+                                    ${expert.matching_reasons.slice(0, 3).map((reason, idx) => 
+                                        `<li>${reason}</li>`
+                                    ).join('')}
+                                    ${expert.matching_reasons.length > 3 ? 
+                                        `<li>+${expert.matching_reasons.length - 3} more reasons</li>` : ''
+                                    }
+                                </ul>
+                            </div>
+                        ` : ''}
+                        <div class="message-snippet" onclick="copyMessage('${expert.personalised_message?.replace(/'/g, "\\'") || ''}', this)">
+                            ${messageSnippet}
+                        </div>
+                    </div>
+                    <div class="expert-right">
+                        <div class="score-card">
+                            <div class="score-card-title">Score Breakdown</div>
+                            ${expert.type_importance_score !== undefined && expert.type_importance_score !== null ? `
+                                <div class="score-item">
+                                    <span class="score-label">Importance:</span>
+                                    <span class="score-value">${Math.round(expert.type_importance_score * 100)}%</span>
+                                </div>
+                            ` : ''}
+                            ${expert.relevancy_to_type_score !== undefined && expert.relevancy_to_type_score !== null ? `
+                                <div class="score-item">
+                                    <span class="score-label">Fit:</span>
+                                    <span class="score-value">${Math.round(expert.relevancy_to_type_score * 100)}%</span>
+                                </div>
+                            ` : ''}
+                            ${expert.responsiveness_score !== undefined && expert.responsiveness_score !== null ? `
+                                <div class="score-item">
+                                    <span class="score-label">Responsiveness:</span>
+                                    <span class="score-value">${Math.round(expert.responsiveness_score * 100)}%</span>
+                                </div>
+                            ` : ''}
+                            <div class="score-item final">
+                                <span class="score-label">Final Score:</span>
+                                <span class="score-value">${Math.round(expert.relevance_score * 100)}%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            }).join('');
+
+            document.getElementById('experts-list').innerHTML = expertsHtml;
+        }
+
+        // Load job details
+        async function loadJobDetails() {
+            try {
+                const response = await fetch(`/api/v1/source/${jobId}`);
+                if (!response.ok) throw new Error('Failed to load job details');
+                
+                const job = await response.json();
+                currentExperts = job.experts || [];
+
+                // Extract unique expert types
+                const expertTypes = [];
+                if (job.raw_outputs?.expert_types) {
+                    expertTypes.push(...job.raw_outputs.expert_types);
+                }
+
+                // Debug: Log the data structure
+                console.log('Expert Types:', expertTypes);
+                console.log('Raw outputs:', job.raw_outputs);
+                
+                // Assign expert types to experts
+                // Since expert_type is not stored in DB, we need a simple heuristic
+                if (expertTypes.length > 0 && currentExperts.length > 0) {
+                    // Simple distribution: assign expert types evenly
+                    const expertsPerType = Math.ceil(currentExperts.length / expertTypes.length);
+                    
+                    currentExperts.forEach((expert, index) => {
+                        const typeIndex = Math.floor(index / expertsPerType);
+                        expert.expert_type = expertTypes[Math.min(typeIndex, expertTypes.length - 1)].expert_title;
+                    });
+                    
+                    console.log('Expert type assignment complete');
+                }
+
+                // Truncate title to 80 chars
+                const truncatedTitle = job.project_description.length > 80 
+                    ? job.project_description.substring(0, 80) + '...' 
+                    : job.project_description;
+
+                const jobHtml = `
+                    <div class="job-header">
+                        <h1 class="job-title" title="${job.project_description}">${truncatedTitle}</h1>
+                        <div class="job-status">
+                            <span class="status-badge status-${job.status}">${job.status}</span>
+                            ${job.llm_metrics ? `
+                                <div class="llm-stats-tooltip">
+                                    <span class="status-indicator">
+                                        <span class="status-dot"></span>
+                                        LLM: Healthy
+                                    </span>
+                                    <div class="llm-stats-panel">
+                                        <div class="llm-stats-title">LLM Performance Stats</div>
+                                        <div class="llm-stat-row">
+                                            <span class="llm-stat-label">Total Calls:</span>
+                                            <span class="llm-stat-value">${job.llm_metrics.total_calls}</span>
+                                        </div>
+                                        <div class="llm-stat-row">
+                                            <span class="llm-stat-label">Success Rate:</span>
+                                            <span class="llm-stat-value">${Math.round((job.llm_metrics.successful_calls / job.llm_metrics.total_calls) * 100)}%</span>
+                                        </div>
+                                        <div class="llm-stat-row">
+                                            <span class="llm-stat-label">Avg Response Time:</span>
+                                            <span class="llm-stat-value">${(job.llm_metrics.avg_duration_ms / 1000).toFixed(1)}s</span>
+                                        </div>
+                                        <div class="llm-stat-row">
+                                            <span class="llm-stat-label">Failed Calls:</span>
+                                            <span class="llm-stat-value">${job.llm_metrics.failed_calls}</span>
+                                        </div>
+                                        <div class="llm-stat-row">
+                                            <span class="llm-stat-label">Timeouts:</span>
+                                            <span class="llm-stat-value">${job.llm_metrics.timeout_calls}</span>
+                                        </div>
+                                        <div class="llm-stat-row">
+                                            <span class="llm-stat-label">Total Retries:</span>
+                                            <span class="llm-stat-value">${job.llm_metrics.total_retries}</span>
+                                        </div>
+                                        ${Object.entries(job.llm_metrics.by_model).map(([model, stats]) => `
+                                            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
+                                                <div style="font-weight: 600; margin-bottom: 8px;">${model}</div>
+                                                <div class="llm-stat-row">
+                                                    <span class="llm-stat-label">Calls:</span>
+                                                    <span class="llm-stat-value">${stats.calls}</span>
+                                                </div>
+                                                <div class="llm-stat-row">
+                                                    <span class="llm-stat-label">Success Rate:</span>
+                                                    <span class="llm-stat-value">${Math.round(stats.success_rate)}%</span>
+                                                </div>
+                                                <div class="llm-stat-row">
+                                                    <span class="llm-stat-label">Total Tokens:</span>
+                                                    <span class="llm-stat-value">${stats.total_tokens.toLocaleString()}</span>
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                        <div class="job-metadata">
+                            <div class="metadata-item">
+                                <span class="metadata-label">Created</span>
+                                <span class="metadata-value">${formatDate(job.metadata?.created_at)}</span>
+                            </div>
+                            <div class="metadata-item">
+                                <span class="metadata-label">Processing Time</span>
+                                <span class="metadata-value">${formatDuration(job.metadata?.processing_time_seconds)}</span>
+                            </div>
+                            <div class="metadata-item">
+                                <span class="metadata-label">Total Experts</span>
+                                <span class="metadata-value">${currentExperts.length}</span>
+                            </div>
+                            <div class="metadata-item">
+                                <span class="metadata-label">Expert Types</span>
+                                <span class="metadata-value">${expertTypes.length}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${expertTypes.length > 0 ? `
+                        <div class="filter-section">
+                            <h2 class="filter-title">Filter by Expert Type</h2>
+                            <div class="filter-pills">
+                                <button class="filter-pill ${!selectedExpertType ? 'active' : ''}" 
+                                        onclick="filterExperts(null)">
+                                    All (${currentExperts.length})
+                                </button>
+                                ${expertTypes.map(type => {
+                                    const count = currentExperts.filter(e => e.expert_type === type.expert_title).length;
+                                    return `
+                                        <button class="filter-pill ${selectedExpertType === type.expert_title ? 'active' : ''}"
+                                                onclick="filterExperts('${type.expert_title}')">
+                                            ${type.expert_title} (${count})
+                                        </button>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <div id="experts-list" class="experts-list"></div>
+                `;
+
+                document.getElementById('job-content').innerHTML = jobHtml;
+                renderExperts();
+
+            } catch (error) {
+                console.error('Failed to load job details:', error);
+                document.getElementById('job-content').innerHTML = `
+                    <div class="job-header">
+                        <h1 class="job-title">Failed to load job details</h1>
+                        <p style="color: var(--text-secondary); margin-top: 8px;">${error.message}</p>
+                        <a href="/jobs.html" class="btn btn-primary" style="margin-top: 16px;">Back to Jobs</a>
+                    </div>
+                `;
+            }
+        }
+
+        // Load job details on page load
+        loadJobDetails();
+    </script>
+</body>
+</html>

@@ -28,6 +28,7 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://unpkg.com"],
+      scriptSrcAttr: ["'unsafe-inline'"], // Allow inline event handlers
       styleSrc: ["'self'", "'unsafe-inline'", "https:"],
       imgSrc: ["'self'", "data:"],
       connectSrc: ["'self'"],
@@ -59,9 +60,9 @@ app.get('/health', (_req, res) => {
 // Serve UI
 app.use(express.static('dist/ui'));
 
-// Root route for UI
+// Root route for UI - serves jobs list as default
 app.get('/', (_req, res) => {
-  res.sendFile('index.html', { root: 'dist/ui' });
+  res.sendFile('jobs.html', { root: 'dist/ui' });
 });
 
 // Routes
