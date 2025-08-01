@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Console</title>
+</head>
+<body>
+    <h1>Open Browser Console to See Errors</h1>
+    <p>Go to: <a href="http://localhost:8080" target="_blank">http://localhost:8080</a></p>
+    <p>Then open Developer Tools (F12) and check the Console tab for any errors.</p>
+    
+    <h2>Common issues to check:</h2>
+    <ul>
+        <li>Babel transpilation errors</li>
+        <li>API fetch errors</li>
+        <li>React component errors</li>
+        <li>Missing showNotification function in components</li>
+    </ul>
+    
+    <h2>Quick API Test:</h2>
+    <button onclick="testAPI()">Test API Endpoints</button>
+    <div id="results"></div>
+    
+    <script>
+        async function testAPI() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<h3>Testing...</h3>';
+            
+            try {
+                // Test jobs endpoint
+                const jobsResponse = await fetch('http://localhost:8080/api/v1/jobs');
+                const jobsData = await jobsResponse.json();
+                
+                results.innerHTML += `<p>✓ Jobs endpoint: ${jobsData.jobs ? jobsData.jobs.length : 0} jobs found</p>`;
+                
+                // Test a specific job if available
+                if (jobsData.jobs && jobsData.jobs.length > 0) {
+                    const jobId = jobsData.jobs[0].id;
+                    const jobResponse = await fetch(`http://localhost:8080/api/v1/source/${jobId}`);
+                    const jobData = await jobResponse.json();
+                    
+                    results.innerHTML += `<p>✓ Job detail endpoint: ${jobData.status}</p>`;
+                }
+            } catch (error) {
+                results.innerHTML += `<p style="color: red;">✗ Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

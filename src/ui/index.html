@@ -705,7 +705,7 @@
                         throw new Error('Failed to load jobs');
                     }
                     const data = await response.json();
-                    setJobs(data.requests || []);
+                    setJobs(data.jobs || []);
                 } finally {
                     setLoading(false);
                 }
