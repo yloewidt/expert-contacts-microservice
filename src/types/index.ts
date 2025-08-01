@@ -7,13 +7,17 @@ export interface Expert {
   name: string;
   title: string;
   company: string;
-  linkedin_url: string;
-  email: string;
+  linkedin_url: string | null;
+  email: string | null;
   relevance_score: number;
   matching_reasons: string[];
   personalised_message: string;
   areas_of_expertise: string[];
   conversation_topics: string[];
+  // Score breakdown components
+  type_importance_score?: number;
+  relevancy_to_type_score?: number;
+  responsiveness_score?: number;
 }
 
 export interface ExpertType {
@@ -26,8 +30,8 @@ export interface SearchCandidate {
   name: string;
   title: string;
   company: string;
-  linkedin_url: string;
-  email: string;
+  linkedin_url: string | null;
+  email: string | null;
   matching_reasons: string[];
   relevancy_to_type_score: number;
   responsiveness: number;

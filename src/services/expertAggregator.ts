@@ -17,7 +17,10 @@ export class ExpertAggregatorService {
       const expertType = expertTypes[typeIndex];
       
       results.forEach(candidate => {
-        const key = candidate.linkedin_url.toLowerCase();
+        // Use LinkedIn URL if available, otherwise use name+company as key
+        const key = candidate.linkedin_url 
+          ? candidate.linkedin_url.toLowerCase()
+          : `${candidate.name}_${candidate.company}`.toLowerCase();
         
         if (!expertMap.has(key)) {
           expertMap.set(key, {
@@ -43,6 +46,11 @@ export class ExpertAggregatorService {
         0
       );
 
+      // Get average scores for breakdown
+      const avgTypeImportance = typeScores.reduce((sum, ts) => sum + ts.importance, 0) / typeScores.length;
+      const avgRelevancy = typeScores.reduce((sum, ts) => sum + ts.score, 0) / typeScores.length;
+      const avgResponsiveness = typeScores.reduce((sum, ts) => sum + ts.responsiveness, 0) / typeScores.length;
+
       return {
         id: uuidv4(),
         name: candidate.name,
@@ -54,7 +62,11 @@ export class ExpertAggregatorService {
         matching_reasons: candidate.matching_reasons,
         personalised_message: candidate.personalised_message,
         areas_of_expertise: candidate.areas_of_expertise || [],
-        conversation_topics: candidate.conversation_topics || []
+        conversation_topics: candidate.conversation_topics || [],
+        // Add score breakdown
+        type_importance_score: Math.round(avgTypeImportance * 100) / 100,
+        relevancy_to_type_score: Math.round(avgRelevancy * 100) / 100,
+        responsiveness_score: Math.round(avgResponsiveness * 100) / 100
       };
     });
 

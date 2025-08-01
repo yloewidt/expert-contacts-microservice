@@ -453,15 +453,15 @@ VALIIDATE LINKEDIN LINK viability google searches with site:linkedin.com, check 
           }
         }
       },
-      reasoning: { effort: "medium" },
+      reasoning: { effort: process.env.O3_REASONING_EFFORT || "low" },
       tools: [{
         type: "web_search_preview",
         user_location: { type: "approximate", country: "US" },
-        search_context_size: "medium"
+        search_context_size: process.env.O3_SEARCH_CONTEXT_SIZE || "low"
       }],
       store: true
     }, {
-      timeout: 300000 // 5 minute timeout
+      timeout: parseInt(process.env.O3_TIMEOUT_MS || '900000') // Default 15 minutes
     });
   }
 

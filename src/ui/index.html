@@ -171,6 +171,66 @@
             border-radius: 20px;
             font-weight: bold;
             font-size: 16px;
+            cursor: help;
+            position: relative;
+        }
+        
+        .score-tooltip {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 10px;
+            background: #1f2937;
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            width: 250px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .expert-score:hover .score-tooltip {
+            opacity: 1;
+        }
+        
+        .score-breakdown {
+            margin-top: 8px;
+        }
+        
+        .score-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 4px 0;
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .score-item:last-child {
+            border-bottom: none;
+        }
+        
+        .expert-email {
+            margin-top: 5px;
+            font-size: 0.9rem;
+            color: #6b7280;
+        }
+        
+        .expert-email a {
+            color: #3b82f6;
+            text-decoration: none;
+        }
+        
+        .expert-email a:hover {
+            text-decoration: underline;
+        }
+        
+        .no-email {
+            color: #9ca3af;
+            font-style: italic;
         }
         
         .expert-reasons {
@@ -743,9 +803,33 @@
                                         </h3>
                                         <div className="expert-title">{expert.title}</div>
                                         <div className="expert-company">{expert.company}</div>
+                                        <div className="expert-email">
+                                            {expert.email ? (
+                                                <a href={`mailto:${expert.email}`}>{expert.email}</a>
+                                            ) : (
+                                                <span className="no-email">No email available</span>
+                                            )}
+                                        </div>
                                     </div>
                                     <div className="expert-score">
                                         {(expert.relevance_score * 100).toFixed(0)}%
+                                        <div className="score-tooltip">
+                                            <div>Total Score: {expert.relevance_score.toFixed(2)}</div>
+                                            <div className="score-breakdown">
+                                                <div className="score-item">
+                                                    <span>Type Importance:</span>
+                                                    <span>{expert.type_importance_score?.toFixed(2) || 'N/A'}</span>
+                                                </div>
+                                                <div className="score-item">
+                                                    <span>Expert Matching:</span>
+                                                    <span>{expert.relevancy_to_type_score?.toFixed(2) || 'N/A'}</span>
+                                                </div>
+                                                <div className="score-item">
+                                                    <span>Responsiveness:</span>
+                                                    <span>{expert.responsiveness_score?.toFixed(2) || 'N/A'}</span>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 
@@ -755,9 +839,41 @@
                                         {(Array.isArray(expert.matching_reasons) 
                                             ? expert.matching_reasons 
                                             : [expert.matching_reasons || 'Relevant expertise']
-                                        ).map((reason, idx) => (
-                                            <li key={idx}>{reason}</li>
-                                        ))}
+                                        ).map((reason, idx) => {
+                                            // Parse citations - look for citeturn patterns
+                                            const parts = [];
+                                            const citationRegex = /citeturn(\d+)search(\d+)/g;
+                                            let lastIndex = 0;
+                                            let match;
+                                            
+                                            while ((match = citationRegex.exec(reason)) !== null) {
+                                                // Add text before citation
+                                                if (match.index > lastIndex) {
+                                                    parts.push(reason.substring(lastIndex, match.index));
+                                                }
+                                                // Add citation as superscript link
+                                                const citeNum = match[1];
+                                                parts.push(
+                                                    <sup key={match.index}>
+                                                        <a href="#" style={{color: '#3b82f6', textDecoration: 'none'}} title={`Citation ${citeNum}`}>
+                                                            [{citeNum}]
+                                                        </a>
+                                                    </sup>
+                                                );
+                                                lastIndex = match.index + match[0].length;
+                                            }
+                                            
+                                            // Add remaining text
+                                            if (lastIndex < reason.length) {
+                                                parts.push(reason.substring(lastIndex));
+                                            }
+                                            
+                                            return (
+                                                <li key={idx}>
+                                                    {parts.length > 0 ? parts : reason}
+                                                </li>
+                                            );
+                                        })}
                                     </ul>
                                 </div>
                                 
