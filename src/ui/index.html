@@ -3,1226 +3,1613 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Expert Sourcing Service</title>
+    <title>Expert Contacts - AI-Powered Expert Discovery</title>
+    <link rel="icon" type="image/png" href="/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        /* Reset and Base Styles */
         * {
-            box-sizing: border-box;
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
         }
-        
+
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --background: #f9fafb;
+            --surface: #ffffff;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --border: #e5e7eb;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background-color: #f3f4f6;
-            color: #1f2937;
-            line-height: 1.6;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--background);
+            color: var(--text-primary);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px 0;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        
-        .header h1 {
-            text-align: center;
-            font-size: 2.5rem;
+
+        /* Typography */
+        h1 {
+            font-size: 2.25rem;
             font-weight: 700;
+            line-height: 1.2;
         }
-        
-        .nav-buttons {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        
-        .nav-button {
-            padding: 10px 20px;
-            background: #3b82f6;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background 0.3s ease;
-        }
-        
-        .nav-button:hover {
-            background: #2563eb;
-        }
-        
-        .nav-button.active {
-            background: #667eea;
-        }
-        
-        .job-card {
-            background: white;
-            padding: 20px;
-            margin-bottom: 15px;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .job-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-        
-        .job-status {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
+
+        h2 {
+            font-size: 1.875rem;
             font-weight: 600;
+            line-height: 1.3;
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+
+        /* Layout */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 64px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 24px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .main-container {
+            margin-top: 64px;
+            min-height: calc(100vh - 64px);
+        }
+
+        .content-wrapper {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 32px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav-tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .nav-tab:hover {
+            color: var(--text-primary);
+        }
+
+        .nav-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        /* Cards */
+        .card {
+            background: var(--surface);
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s ease;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background: var(--surface);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: var(--background);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-secondary);
+            padding: 8px 16px;
+        }
+
+        .btn-ghost:hover:not(:disabled) {
+            background: var(--background);
+            color: var(--text-primary);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Status Badges */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
             text-transform: uppercase;
         }
-        
-        .job-status.pending {
-            background-color: #fef3c7;
-            color: #92400e;
+
+        .status-pending {
+            background: #e5e7eb;
+            color: #6b7280;
         }
-        
-        .job-status.processing {
-            background-color: #dbeafe;
+
+        .status-processing {
+            background: #dbeafe;
             color: #1e40af;
         }
-        
-        .job-status.completed {
-            background-color: #d1fae5;
+
+        .status-completed {
+            background: #d1fae5;
             color: #065f46;
         }
-        
-        .job-status.failed {
-            background-color: #fee2e2;
+
+        .status-failed {
+            background: #fee2e2;
             color: #991b1b;
         }
-        
-        .job-description {
-            background-color: #f3f4f6;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+
+        /* Loading States */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 0.8s linear infinite;
         }
-        
-        .metadata {
-            background-color: white;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 16px 0;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--primary);
+            transition: width 0.3s ease;
+        }
+
+        .progress-pulse {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        /* Jobs List */
+        .jobs-header {
             display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
         }
-        
-        .metadata > div {
+
+        .jobs-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .job-card {
+            cursor: pointer;
+            position: relative;
+        }
+
+        .job-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 16px;
+            gap: 16px;
+        }
+
+        .job-description {
             flex: 1;
-            min-width: 200px;
+            font-weight: 500;
+            color: var(--text-primary);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
-        
-        .llm-status-indicator {
+
+        .job-metadata {
+            display: flex;
+            gap: 24px;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .job-metadata-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Job Details */
+        .back-nav {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            padding: 8px 16px;
-            background: white;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 14px;
+            margin-bottom: 24px;
+            color: var(--text-secondary);
+            text-decoration: none;
             font-weight: 500;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-            position: relative;
-            margin: 20px 0;
+            transition: color 0.15s ease;
         }
-        
-        .llm-status-indicator:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+
+        .back-nav:hover {
+            color: var(--text-primary);
         }
-        
-        .llm-status-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            animation: pulse 3s infinite;
+
+        .job-header {
+            margin-bottom: 32px;
         }
-        
-        .llm-status-dot.healthy {
-            background-color: #10b981;
+
+        .job-title {
+            margin-bottom: 16px;
         }
-        
-        .llm-status-dot.warning {
-            background-color: #f59e0b;
-        }
-        
-        .llm-status-dot.error {
-            background-color: #ef4444;
-        }
-        
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-        
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 16px 24px;
-            background: #10b981;
-            color: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            opacity: 0;
-            transform: translateX(100%);
-            transition: all 0.3s ease;
-            z-index: 2000;
-            font-weight: 500;
-        }
-        
-        .notification.show {
-            opacity: 1;
-            transform: translateX(0);
-        }
-        
-        .notification.error {
-            background: #ef4444;
-        }
-        
-        .llm-metrics-popup {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            margin-top: 10px;
-            background: rgba(31, 41, 55, 0.98);
-            backdrop-filter: blur(10px);
-            color: white;
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            padding: 20px;
-            min-width: 400px;
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(-10px);
-            transition: all 0.3s ease;
-        }
-        
-        .llm-status-indicator:hover .llm-metrics-popup {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
-        
-        .llm-metrics-popup h3 {
-            color: white;
-        }
-        
-        .metrics-grid {
+
+        .job-info-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .metric-card {
-            text-align: center;
-            padding: 10px;
-            background: #f9fafb;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+            margin: 24px 0;
+            padding: 24px;
+            background: var(--background);
             border-radius: 8px;
         }
-        
-        .metric-label {
-            font-size: 12px;
-            color: #6b7280;
-            margin-bottom: 5px;
-        }
-        
-        .metric-value {
-            font-size: 20px;
-            font-weight: bold;
-            color: #1f2937;
-        }
-        
-        .metrics-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-        }
-        
-        .metrics-table th,
-        .metrics-table td {
-            padding: 8px;
-            text-align: left;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        
-        .metrics-table th {
-            background-color: #f9fafb;
-            font-weight: 600;
-            color: #374151;
-        }
-        
-        .expert-filters {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+
+        .info-item {
             display: flex;
-            align-items: center;
-            gap: 15px;
+            flex-direction: column;
+            gap: 4px;
         }
-        
-        .filter-label {
-            font-weight: 500;
-            color: #374151;
+
+        .info-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
         }
-        
-        .filter-button {
-            padding: 6px 12px;
-            border: 1px solid #e5e7eb;
-            background: white;
-            border-radius: 6px;
+
+        .info-value {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Expert Type Filter */
+        .filter-section {
+            margin: 32px 0;
+        }
+
+        .filter-pills {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+
+        .filter-pill {
+            padding: 8px 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 9999px;
+            font-size: 0.875rem;
             cursor: pointer;
-            font-size: 14px;
+            transition: all 0.15s ease;
+        }
+
+        .filter-pill:hover {
+            background: var(--background);
+        }
+
+        .filter-pill.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* Experts Grid */
+        .experts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+            margin-top: 32px;
+        }
+
+        .expert-card {
+            background: var(--surface);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: var(--shadow-sm);
             transition: all 0.2s ease;
         }
-        
-        .filter-button:hover {
-            background: #f3f4f6;
-            border-color: #3b82f6;
-        }
-        
-        .filter-button.active {
-            background: #3b82f6;
-            color: white;
-            border-color: #3b82f6;
-        }
-        
-        .expert-grid {
-            display: grid;
-            gap: 20px;
-        }
-        
-        .expert-card {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-        }
-        
+
         .expert-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            box-shadow: var(--shadow-md);
         }
-        
+
         .expert-header {
             display: flex;
             justify-content: space-between;
             align-items: start;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
-        
-        .expert-info h3 {
-            margin-bottom: 5px;
+
+        .expert-name {
+            font-weight: 600;
+            font-size: 1.125rem;
+            color: var(--text-primary);
         }
-        
-        .expert-info h3 a {
-            color: #667eea;
-            text-decoration: none;
-            transition: color 0.3s ease;
+
+        .relevance-score {
+            background: var(--success);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
         }
-        
-        .expert-info h3 a:hover {
-            color: #764ba2;
+
+        .expert-info {
+            margin-bottom: 16px;
         }
-        
-        .no-linkedin {
-            color: #1f2937;
-        }
-        
+
         .expert-title {
-            color: #4b5563;
-            font-size: 0.95rem;
-            margin-bottom: 3px;
+            color: var(--text-primary);
+            margin-bottom: 4px;
         }
-        
+
         .expert-company {
-            color: #6b7280;
-            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
         }
-        
-        .expert-score {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 16px;
-            cursor: help;
-            position: relative;
-        }
-        
-        .score-tooltip {
-            position: absolute;
-            top: 100%;
-            right: 0;
-            margin-top: 10px;
-            background: #1f2937;
-            color: white;
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            width: 250px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            z-index: 1000;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        
-        .expert-score:hover .score-tooltip {
-            opacity: 1;
-        }
-        
-        .score-breakdown {
+
+        .expert-linkedin {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 0.875rem;
             margin-top: 8px;
         }
-        
-        .score-item {
-            display: flex;
-            justify-content: space-between;
-            margin: 4px 0;
-            padding: 4px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .score-item:last-child {
-            border-bottom: none;
-        }
-        
-        .expert-email {
-            margin-top: 5px;
-            font-size: 0.9rem;
-            color: #6b7280;
-        }
-        
-        .expert-email a {
-            color: #3b82f6;
-            text-decoration: none;
-        }
-        
-        .expert-email a:hover {
+
+        .expert-linkedin:hover {
             text-decoration: underline;
         }
-        
-        .no-email {
-            color: #9ca3af;
-            font-style: italic;
-        }
-        
-        .expert-reasons {
-            margin-top: 15px;
-        }
-        
-        .expert-reasons h4 {
-            font-size: 14px;
-            color: #4b5563;
-            margin-bottom: 8px;
-        }
-        
-        .expert-reasons ul {
-            list-style: none;
-            padding-left: 0;
-        }
-        
-        .expert-reasons li {
-            padding: 8px 0;
-            padding-left: 25px;
-            position: relative;
-            color: #374151;
-            font-size: 14px;
-            line-height: 1.6;
-        }
-        
-        .expert-reasons li:before {
-            content: '✓';
-            position: absolute;
-            left: 0;
-            color: #10b981;
-            font-weight: bold;
-        }
-        
-        .expert-expertise {
-            margin-top: 15px;
-        }
-        
-        .expert-expertise h4 {
-            font-size: 14px;
-            color: #4b5563;
-            margin-bottom: 8px;
-        }
-        
+
         .expertise-tags {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 8px;
+            gap: 6px;
+            margin: 16px 0;
         }
-        
+
         .expertise-tag {
-            background: #e3f2fd;
-            color: #1976d2;
-            padding: 4px 12px;
-            border-radius: 16px;
-            font-size: 0.85rem;
+            background: #e0e7ff;
+            color: #3730a3;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
             font-weight: 500;
         }
-        
-        .expert-topics {
-            margin-top: 15px;
+
+        .matching-reasons {
+            margin: 16px 0;
         }
-        
-        .expert-topics h4 {
-            font-size: 14px;
-            color: #4b5563;
+
+        .matching-reasons-title {
+            font-size: 0.875rem;
+            font-weight: 600;
             margin-bottom: 8px;
+            color: var(--text-primary);
         }
-        
-        .expert-topics ul {
+
+        .matching-reasons-list {
             list-style: none;
-            padding-left: 0;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
         }
-        
-        .expert-topics li {
-            padding: 6px 0;
-            padding-left: 20px;
+
+        .matching-reasons-list li {
             position: relative;
-            color: #6b7280;
-            font-size: 14px;
-            line-height: 1.5;
+            padding-left: 20px;
+            margin-bottom: 6px;
         }
-        
-        .expert-topics li:before {
-            content: '→';
+
+        .matching-reasons-list li:before {
+            content: '✓';
             position: absolute;
             left: 0;
-            color: #3b82f6;
+            color: var(--success);
+            font-weight: bold;
         }
-        
+
         .expert-actions {
-            margin-top: 20px;
-            padding-top: 15px;
-            border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
         }
-        
-        .source-link {
-            color: #3b82f6;
-            text-decoration: none;
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-        
-        .source-link:hover {
-            text-decoration: underline;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #6b7280;
-        }
-        
-        .error {
-            background-color: #fee;
-            color: #c00;
-            padding: 20px;
-            border-radius: 5px;
-            margin: 20px 0;
-        }
-        
-        .create-job-form {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+        /* Create Job Form */
+        .form-container {
             max-width: 800px;
             margin: 0 auto;
         }
-        
+
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
-        
+
         .form-label {
             display: block;
             margin-bottom: 8px;
             font-weight: 500;
-            color: #374151;
+            color: var(--text-primary);
         }
-        
-        .form-input,
+
+        .form-label-required {
+            color: var(--error);
+        }
+
         .form-textarea {
             width: 100%;
-            padding: 10px 15px;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border 0.3s ease;
+            min-height: 150px;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 1rem;
+            resize: vertical;
+            transition: border-color 0.15s ease;
         }
-        
-        .form-input:focus,
+
         .form-textarea:focus {
             outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
         }
-        
-        .form-textarea {
-            min-height: 120px;
-            resize: vertical;
+
+        .char-counter {
+            text-align: right;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
         }
-        
-        .effort-selector {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin-top: 10px;
+
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
-        
-        .effort-option {
-            padding: 15px;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
+
+        .radio-option {
+            display: flex;
+            align-items: start;
+            gap: 12px;
+            padding: 16px;
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: 6px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: center;
+            transition: all 0.15s ease;
         }
-        
-        .effort-option:hover {
-            border-color: #3b82f6;
-            background: #f0f9ff;
+
+        .radio-option:hover {
+            border-color: var(--primary);
         }
-        
-        .effort-option.selected {
-            border-color: #3b82f6;
-            background: #eff6ff;
+
+        .radio-option.selected {
+            border-color: var(--primary);
+            background: rgba(37, 99, 235, 0.05);
         }
-        
-        .effort-option h4 {
-            margin-bottom: 5px;
-            color: #1f2937;
+
+        .radio-input {
+            margin-top: 2px;
         }
-        
-        .effort-option p {
-            font-size: 14px;
-            color: #6b7280;
-            margin: 0;
+
+        .radio-content {
+            flex: 1;
         }
-        
-        .form-submit {
-            background: #3b82f6;
-            color: white;
-            padding: 12px 30px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
+
+        .radio-label {
             font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .radio-description {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            padding: 24px;
+        }
+
+        .modal {
+            background: var(--surface);
+            border-radius: 8px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
             cursor: pointer;
-            transition: background 0.3s ease;
+            color: var(--text-secondary);
+            transition: all 0.15s ease;
         }
-        
-        .form-submit:hover {
-            background: #2563eb;
+
+        .modal-close:hover {
+            background: var(--background);
+            color: var(--text-primary);
         }
-        
-        .form-submit:disabled {
-            background: #9ca3af;
-            cursor: not-allowed;
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .modal-footer {
+            padding: 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .message-preview {
+            background: var(--background);
+            padding: 16px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.875rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--surface);
+            padding: 16px 24px;
+            border-radius: 6px;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 300;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .toast-success {
+            border-left: 4px solid var(--success);
+        }
+
+        .toast-error {
+            border-left: 4px solid var(--error);
+        }
+
+        /* LLM Health Indicator */
+        .llm-health {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: var(--background);
+            border-radius: 6px;
+            font-size: 0.875rem;
+        }
+
+        .llm-health-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .llm-health-healthy {
+            background: var(--success);
+        }
+
+        .llm-health-warning {
+            background: var(--warning);
+        }
+
+        .llm-health-error {
+            background: var(--error);
+        }
+
+        /* Loading Skeleton */
+        .skeleton-card {
+            background: var(--surface);
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 16px;
+        }
+
+        .skeleton-line {
+            height: 20px;
+            border-radius: 4px;
+            margin-bottom: 12px;
+        }
+
+        .skeleton-line.short {
+            width: 60%;
+        }
+
+        .skeleton-line.medium {
+            width: 80%;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 80px 24px;
+        }
+
+        .empty-state-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            opacity: 0.3;
+        }
+
+        .empty-state-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .empty-state-description {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .content-wrapper {
+                padding: 16px;
+            }
+
+            .nav-tabs {
+                gap: 4px;
+            }
+
+            .nav-tab {
+                padding: 8px 16px;
+                font-size: 0.875rem;
+            }
+
+            .jobs-header {
+                flex-direction: column;
+                gap: 16px;
+                align-items: stretch;
+            }
+
+            .job-metadata {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .experts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .expert-actions {
+                flex-direction: column;
+            }
+        }
+
+        /* Icons */
+        .icon {
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .icon-sm {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.2s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Hide elements */
+        .hidden {
+            display: none;
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="container">
-            <h1>Expert Sourcing Service</h1>
-        </div>
-    </div>
-    
     <div id="root"></div>
 
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
-    <script type="text/babel" data-presets="env,react">
-        const { useState, useEffect } = React;
-        
-        function App() {
-            const [view, setView] = useState('jobs');
-            const [jobs, setJobs] = useState([]);
-            const [selectedJob, setSelectedJob] = useState(null);
-            const [jobDetails, setJobDetails] = useState(null);
-            const [loading, setLoading] = useState(false);
-            const [error, setError] = useState(null);
-            const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
-            
-            const showNotification = (message, type = 'success') => {
-                setNotification({ show: true, message, type });
-                setTimeout(() => {
-                    setNotification({ show: false, message: '', type: 'success' });
-                }, 3000);
-            };
-            
+
+    <script type="text/babel">
+        const { useState, useEffect, useCallback, useRef } = React;
+
+        // Icons as React components
+        const Icons = {
+            ArrowLeft: () => (
+                <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+            ),
+            LinkedIn: () => (
+                <svg className="icon icon-sm" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                </svg>
+            ),
+            Copy: () => (
+                <svg className="icon icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+            ),
+            Check: () => (
+                <svg className="icon icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+            ),
+            X: () => (
+                <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            ),
+            Refresh: () => (
+                <svg className="icon icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+            ),
+            Plus: () => (
+                <svg className="icon icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+            ),
+            Briefcase: () => (
+                <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+            )
+        };
+
+        // Utility functions
+        const formatDate = (dateString) => {
+            return new Date(dateString).toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        };
+
+        const formatDuration = (seconds) => {
+            if (seconds < 60) return `${Math.round(seconds)}s`;
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = Math.round(seconds % 60);
+            return `${minutes}m ${remainingSeconds}s`;
+        };
+
+        const copyToClipboard = async (text) => {
+            try {
+                await navigator.clipboard.writeText(text);
+                return true;
+            } catch (err) {
+                console.error('Failed to copy:', err);
+                return false;
+            }
+        };
+
+        // Toast Notification Component
+        function Toast({ message, type = 'success', onClose }) {
             useEffect(() => {
-                if (view === 'jobs') {
-                    loadJobs();
-                }
-            }, [view]);
-            
-            const loadJobs = async () => {
-                setLoading(true);
-                try {
-                    const response = await fetch('/api/v1/jobs');
-                    if (!response.ok) {
-                        throw new Error('Failed to load jobs');
-                    }
-                    const data = await response.json();
-                    setJobs(data.jobs || []);
-                } finally {
-                    setLoading(false);
-                }
-            };
-            
-            const loadJobDetails = async (jobId) => {
-                setLoading(true);
-                try {
-                    const response = await fetch(`/api/v1/source/${jobId}`);
-                    if (!response.ok) {
-                        throw new Error('Failed to load job details');
-                    }
-                    const jobData = await response.json();
-                    setJobDetails(jobData);
-                    setView('details');
-                } finally {
-                    setLoading(false);
-                }
-            };
-            
-            const handleSelectJob = (jobId) => {
-                setSelectedJob(jobId);
-                loadJobDetails(jobId);
-            };
-            
-            
-            const createJob = async (projectDescription, effortLevel) => {
-                setLoading(true);
-                try {
-                    const response = await fetch('/api/v1/source', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ project_description: projectDescription })
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error('Failed to create job');
-                    }
-                    
-                    const result = await response.json();
-                    showNotification(`Job created successfully! ID: ${result.request_id}`);
-                    setView('jobs');
-                    // Reload jobs after a short delay to ensure the new job is indexed
-                    setTimeout(() => {
-                        loadJobs();
-                    }, 1000);
-                } catch (error) {
-                    setError(error.message);
-                } finally {
-                    setLoading(false);
-                }
-            };
-            
+                const timer = setTimeout(onClose, 3000);
+                return () => clearTimeout(timer);
+            }, [onClose]);
+
             return (
-                <div className="container">
-                    <div className="nav-buttons">
-                        <button 
-                            className={`nav-button ${view === 'jobs' ? 'active' : ''}`}
-                            onClick={() => setView('jobs')}
-                        >
-                            View Jobs
-                        </button>
-                        <button 
-                            className={`nav-button ${view === 'create' ? 'active' : ''}`}
-                            onClick={() => setView('create')}
-                        >
-                            Create New Job
-                        </button>
-                    </div>
-                    
-                    <div className={`notification ${notification.type} ${notification.show ? 'show' : ''}`}>
-                        {notification.message}
-                    </div>
-                    
-                    {error && <div className="error">Error: {error}</div>}
-                    
-                    {loading && <div className="loading">Loading...</div>}
-                    
-                    {!loading && view === 'jobs' && (
-                        <JobList jobs={jobs} onSelectJob={handleSelectJob} />
-                    )}
-                    
-                    {!loading && view === 'details' && jobDetails && (
-                        <JobDetails job={jobDetails} showNotification={showNotification} />
-                    )}
-                    
-                    {!loading && view === 'create' && (
-                        <CreateJobForm onSubmit={createJob} />
-                    )}
+                <div className={`toast toast-${type} fade-in`}>
+                    {type === 'success' ? <Icons.Check /> : null}
+                    <span>{message}</span>
                 </div>
             );
         }
-        
-        function JobList({ jobs, onSelectJob }) {
+
+        // Loading Skeleton Component
+        function LoadingSkeleton() {
             return (
-                <div className="job-list">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                        <h2>Sourcing Jobs</h2>
-                        <button 
-                            onClick={() => window.location.reload()}
-                            style={{
-                                padding: '8px 16px',
-                                background: '#3b82f6',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '6px',
-                                cursor: 'pointer',
-                                fontSize: '14px'
-                            }}
-                        >
-                            Refresh
-                        </button>
-                    </div>
-                    {jobs.map(job => (
-                        <div key={job.id} className="job-card" onClick={() => onSelectJob(job.id)}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '10px' }}>
-                                <div style={{ flex: 1 }}>
-                                    <h3 style={{ marginBottom: '10px', color: '#374151' }}>
-                                        {job.project_description.substring(0, 100)}
-                                        {job.project_description.length > 100 && '...'}
-                                    </h3>
-                                    <div style={{ color: '#6b7280', fontSize: '14px' }}>
-                                        Created: {new Date(job.created_at).toLocaleString()}
-                                    </div>
-                                    {job.completed_at && (
-                                        <div style={{ color: '#6b7280', fontSize: '14px' }}>
-                                            Completed: {new Date(job.completed_at).toLocaleString()}
-                                        </div>
-                                    )}
-                                </div>
-                                <span className={`job-status ${job.status}`}>
-                                    {job.status}
-                                </span>
-                            </div>
-                            <div style={{ color: '#9ca3af', fontSize: '12px', marginTop: '10px' }}>
-                                ID: {job.id}
-                            </div>
+                <div className="jobs-grid">
+                    {[1, 2, 3].map(i => (
+                        <div key={i} className="skeleton-card">
+                            <div className="skeleton skeleton-line"></div>
+                            <div className="skeleton skeleton-line short"></div>
+                            <div className="skeleton skeleton-line medium"></div>
                         </div>
                     ))}
                 </div>
             );
         }
-        
-        function JobDetails({ job, showNotification }) {
-            const [selectedExpertType, setSelectedExpertType] = useState('all');
-            const experts = job.experts || [];
-            
-            // Get unique expert types
-            const expertTypes = job.raw_outputs?.expert_types || [];
-            
-            // Filter experts based on selected type
-            const filteredExperts = selectedExpertType === 'all' 
-                ? experts 
-                : experts.filter(expert => expert.expert_type === selectedExpertType);
-            
-            const sortedExperts = [...filteredExperts].sort((a, b) => b.relevance_score - a.relevance_score);
-            
-            // Calculate LLM health status
-            const getLLMStatus = () => {
-                if (!job.llm_metrics) return { status: 'healthy', label: 'No data' };
-                
-                const successRate = job.llm_metrics.successful_calls / job.llm_metrics.total_calls;
-                if (successRate >= 0.9) return { status: 'healthy', label: 'Healthy' };
-                if (successRate >= 0.7) return { status: 'warning', label: 'Warning' };
-                return { status: 'error', label: 'Issues' };
-            };
-            
-            const llmStatus = getLLMStatus();
-            
+
+        // Empty State Component
+        function EmptyState({ title, description, action }) {
             return (
-                <div>
-                    <h2 style={{ marginBottom: '20px' }}>Job Results</h2>
-                    
-                    <div className="job-description">
-                        {job.request_id && <div style={{ marginBottom: '10px', fontSize: '12px', color: '#6b7280' }}>ID: {job.request_id}</div>}
-                        <strong>Project Description:</strong> {job.project_description || 'Loading...'}
+                <div className="empty-state">
+                    <div className="empty-state-icon">
+                        <Icons.Briefcase />
+                    </div>
+                    <h3 className="empty-state-title">{title}</h3>
+                    <p className="empty-state-description">{description}</p>
+                    {action}
+                </div>
+            );
+        }
+
+        // Job Card Component
+        function JobCard({ job, onClick }) {
+            const getStatusColor = (status) => {
+                switch (status) {
+                    case 'pending': return 'pending';
+                    case 'processing': return 'processing';
+                    case 'completed': return 'completed';
+                    case 'failed': return 'failed';
+                    default: return 'pending';
+                }
+            };
+
+            return (
+                <div className="card job-card" onClick={onClick}>
+                    <div className="job-card-header">
+                        <div className="job-description">
+                            {job.project_description}
+                        </div>
+                        <span className={`status-badge status-${getStatusColor(job.status)}`}>
+                            {job.status === 'processing' && <div className="spinner" style={{ width: 12, height: 12 }}></div>}
+                            {job.status}
+                        </span>
                     </div>
                     
-                    {job.metadata && (
-                        <div className="metadata">
-                            <div>
-                                <strong>Created:</strong> {new Date(job.metadata.created_at).toLocaleString()}
+                    {job.status === 'processing' && (
+                        <div className="progress-bar">
+                            <div className="progress-bar-fill progress-pulse" style={{ width: '60%' }}></div>
+                        </div>
+                    )}
+                    
+                    <div className="job-metadata">
+                        <div className="job-metadata-item">
+                            <span>Created: {formatDate(job.created_at)}</span>
+                        </div>
+                        {job.processing_time_seconds && (
+                            <div className="job-metadata-item">
+                                <span>Duration: {formatDuration(job.processing_time_seconds)}</span>
                             </div>
-                            <div>
-                                <strong>Processing Time:</strong> {Math.round(job.metadata.processing_time_seconds)} s
+                        )}
+                        {job.expert_count > 0 && (
+                            <div className="job-metadata-item">
+                                <span>{job.expert_count} experts found</span>
                             </div>
-                            <div>
-                                <strong>Experts Found:</strong> {experts.length}
-                            </div>
-                            {job.llm_metrics && (
-                                <div style={{ marginTop: '5px', position: 'relative' }}>
-                                    <div className="llm-status-indicator" style={{ position: 'relative', display: 'inline-block' }}>
-                                        <div className={`llm-status-dot ${llmStatus.status}`}></div>
-                                        <span>LLM Status: {llmStatus.label}</span>
-                            
-                            <div className="llm-metrics-popup">
-                                <h3 style={{ marginBottom: '15px', fontSize: '16px' }}>LLM Call Metrics</h3>
-                                <div className="metrics-grid">
-                                    <div className="metric-card">
-                                        <div className="metric-label">Total Calls</div>
-                                        <div className="metric-value">{job.llm_metrics.total_calls}</div>
-                                    </div>
-                                    <div className="metric-card">
-                                        <div className="metric-label">Success Rate</div>
-                                        <div className="metric-value">
-                                            {Math.round((job.llm_metrics.successful_calls / job.llm_metrics.total_calls) * 100)}%
-                                        </div>
-                                    </div>
-                                    <div className="metric-card">
-                                        <div className="metric-label">Avg Time</div>
-                                        <div className="metric-value">
-                                            {(job.llm_metrics.avg_duration_ms / 1000).toFixed(1)}s
-                                        </div>
-                                    </div>
-                                    <div className="metric-card">
-                                        <div className="metric-label">Retries</div>
-                                        <div className="metric-value">{job.llm_metrics.total_retries}</div>
-                                    </div>
-                                </div>
-                                
-                                {job.llm_metrics.by_operation && (
-                                    <div style={{ marginTop: '15px' }}>
-                                        <h4 style={{ fontSize: '14px', marginBottom: '10px' }}>By Operation</h4>
-                                        <table className="metrics-table">
-                                            <thead>
-                                                <tr>
-                                                    <th>Operation</th>
-                                                    <th>Calls</th>
-                                                    <th>Success</th>
-                                                    <th>Time</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {Object.entries(job.llm_metrics.by_operation).map(([op, stats]) => (
-                                                    <tr key={op}>
-                                                        <td>{op.replace(/_/g, ' ')}</td>
-                                                        <td>{stats.calls}</td>
-                                                        <td>{stats.success_rate}%</td>
-                                                        <td>{(stats.avg_duration_ms / 1000).toFixed(1)}s</td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                )}
-                                    </div>
-                                </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        // Expert Card Component
+        function ExpertCard({ expert, onShowMessage }) {
+            const [copiedField, setCopiedField] = useState(null);
+
+            const handleCopy = async (text, field) => {
+                const success = await copyToClipboard(text);
+                if (success) {
+                    setCopiedField(field);
+                    setTimeout(() => setCopiedField(null), 2000);
+                }
+            };
+
+            return (
+                <div className="expert-card">
+                    <div className="expert-header">
+                        <h3 className="expert-name">{expert.name}</h3>
+                        <span className="relevance-score">
+                            {Math.round(expert.relevance_score * 100)}%
+                        </span>
+                    </div>
+
+                    <div className="expert-info">
+                        <div className="expert-title">{expert.title}</div>
+                        <div className="expert-company">{expert.company}</div>
+                        {expert.linkedin_url && (
+                            <a 
+                                href={expert.linkedin_url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="expert-linkedin"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <Icons.LinkedIn />
+                                LinkedIn Profile
+                            </a>
+                        )}
+                    </div>
+
+                    {expert.areas_of_expertise && expert.areas_of_expertise.length > 0 && (
+                        <div className="expertise-tags">
+                            {expert.areas_of_expertise.slice(0, 3).map((area, idx) => (
+                                <span key={idx} className="expertise-tag">{area}</span>
+                            ))}
+                            {expert.areas_of_expertise.length > 3 && (
+                                <span className="expertise-tag">+{expert.areas_of_expertise.length - 3} more</span>
                             )}
                         </div>
                     )}
-                    
-                    {expertTypes.length > 0 && (
-                        <div className="expert-filters">
-                            <span className="filter-label">Filter by Expert Type:</span>
-                            <button 
-                                className={`filter-button ${selectedExpertType === 'all' ? 'active' : ''}`}
-                                onClick={() => setSelectedExpertType('all')}
-                            >
-                                All ({experts.length})
-                            </button>
-                            {expertTypes.map((type, idx) => {
-                                const count = experts.filter(e => e.expert_type === type.expert_title).length;
-                                return (
-                                    <button 
-                                        key={idx}
-                                        className={`filter-button ${selectedExpertType === type.expert_title ? 'active' : ''}`}
-                                        onClick={() => setSelectedExpertType(type.expert_title)}
-                                    >
-                                        {type.expert_title} ({count})
-                                    </button>
-                                );
-                            })}
+
+                    {expert.matching_reasons && expert.matching_reasons.length > 0 && (
+                        <div className="matching-reasons">
+                            <div className="matching-reasons-title">Why they match:</div>
+                            <ul className="matching-reasons-list">
+                                {expert.matching_reasons.slice(0, 3).map((reason, idx) => (
+                                    <li key={idx}>{reason}</li>
+                                ))}
+                                {expert.matching_reasons.length > 3 && (
+                                    <li>+{expert.matching_reasons.length - 3} more reasons</li>
+                                )}
+                            </ul>
                         </div>
                     )}
-                    
-                    <div className="expert-grid">
-                        {sortedExperts.map((expert, index) => (
-                            <div key={expert.id || index} className="expert-card">
-                                <div className="expert-header">
-                                    <div className="expert-info">
-                                        <h3>
-                                            {expert.linkedin_url ? (
-                                                <a href={expert.linkedin_url} target="_blank" rel="noopener noreferrer">
-                                                    {expert.name}
-                                                </a>
-                                            ) : (
-                                                <span className="no-linkedin">{expert.name}</span>
-                                            )}
-                                        </h3>
-                                        <div className="expert-title">{expert.title}</div>
-                                        <div className="expert-company">{expert.company}</div>
-                                        <div className="expert-email">
-                                            {expert.email ? (
-                                                <a href={`mailto:${expert.email}`}>{expert.email}</a>
-                                            ) : (
-                                                <span className="no-email">No email available</span>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div className="expert-score">
-                                        {(expert.relevance_score * 100).toFixed(0)}%
-                                        <div className="score-tooltip">
-                                            <div>Total Score: {expert.relevance_score.toFixed(2)}</div>
-                                            <div className="score-breakdown">
-                                                <div className="score-item">
-                                                    <span>Type Importance:</span>
-                                                    <span>{expert.type_importance_score?.toFixed(2) || '0.00'}</span>
-                                                </div>
-                                                <div className="score-item">
-                                                    <span>Expert Matching:</span>
-                                                    <span>{expert.relevancy_to_type_score?.toFixed(2) || '0.00'}</span>
-                                                </div>
-                                                <div className="score-item">
-                                                    <span>Responsiveness:</span>
-                                                    <span>{expert.responsiveness_score?.toFixed(2) || '0.00'}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div className="expert-reasons">
-                                    <h4>Why Relevant:</h4>
-                                    <ul>
-                                        {(Array.isArray(expert.matching_reasons) 
-                                            ? expert.matching_reasons 
-                                            : [expert.matching_reasons || 'Relevant expertise']
-                                        ).map((reason, idx) => {
-                                            // Parse citations - look for citeturn patterns
-                                            const parts = [];
-                                            const citationRegex = /citeturn(\d+)search(\d+)/g;
-                                            let lastIndex = 0;
-                                            let match;
-                                            
-                                            while ((match = citationRegex.exec(reason)) !== null) {
-                                                // Add text before citation
-                                                if (match.index > lastIndex) {
-                                                    parts.push(reason.substring(lastIndex, match.index));
-                                                }
-                                                // Add citation as superscript link
-                                                const citeNum = match[1];
-                                                parts.push(
-                                                    <sup key={match.index}>
-                                                        <a 
-                                                            href="#" 
-                                                            onClick={(e) => {
-                                                                e.preventDefault();
-                                                                alert(`Source citation ${citeNum} - This would link to the original source`);
-                                                            }}
-                                                            style={{color: '#3b82f6', textDecoration: 'none'}} 
-                                                            title={`View source ${citeNum}`}
-                                                        >
-                                                            [{citeNum}]
-                                                        </a>
-                                                    </sup>
-                                                );
-                                                lastIndex = match.index + match[0].length;
-                                            }
-                                            
-                                            // Add remaining text
-                                            if (lastIndex < reason.length) {
-                                                parts.push(reason.substring(lastIndex));
-                                            }
-                                            
-                                            return (
-                                                <li key={idx}>
-                                                    {parts.length > 0 ? parts : reason}
-                                                </li>
-                                            );
-                                        })}
-                                    </ul>
-                                </div>
-                                
-                                {expert.areas_of_expertise && expert.areas_of_expertise.length > 0 && (
-                                    <div className="expert-expertise">
-                                        <h4>Areas of Expertise:</h4>
-                                        <div className="expertise-tags">
-                                            {expert.areas_of_expertise.map((area, idx) => (
-                                                <span key={idx} className="expertise-tag">{area}</span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                                
-                                {expert.conversation_topics && expert.conversation_topics.length > 0 && (
-                                    <div className="expert-topics">
-                                        <h4>Discussion Topics:</h4>
-                                        <ul>
-                                            {expert.conversation_topics.map((topic, idx) => (
-                                                <li key={idx}>{topic}</li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                )}
-                                
-                                {expert.personalised_message && (
-                                    <div className="expert-actions">
-                                        <div className="personalized-message-preview">
-                                            <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '10px' }}>
-                                                {expert.personalised_message.substring(0, 100)}...
-                                            </p>
-                                            <button 
-                                                className="copy-button"
-                                                onClick={() => {
-                                                    navigator.clipboard.writeText(expert.personalised_message);
-                                                    showNotification('Personalized message copied to clipboard!');
-                                                }}
-                                                style={{
-                                                    padding: '6px 12px',
-                                                    background: '#3b82f6',
-                                                    color: 'white',
-                                                    border: 'none',
-                                                    borderRadius: '6px',
-                                                    cursor: 'pointer',
-                                                    fontSize: '14px',
-                                                    transition: 'background 0.2s ease'
-                                                }}
-                                                onMouseOver={(e) => e.target.style.background = '#2563eb'}
-                                                onMouseOut={(e) => e.target.style.background = '#3b82f6'}
-                                            >
-                                                Copy Full Message
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
+
+                    <div className="expert-actions">
+                        <button 
+                            className="btn btn-primary"
+                            onClick={() => onShowMessage(expert)}
+                        >
+                            View Message
+                        </button>
+                        {expert.linkedin_url && (
+                            <button 
+                                className="btn btn-secondary"
+                                onClick={() => handleCopy(expert.linkedin_url, 'linkedin')}
+                            >
+                                {copiedField === 'linkedin' ? <Icons.Check /> : <Icons.Copy />}
+                                {copiedField === 'linkedin' ? 'Copied!' : 'Copy LinkedIn'}
+                            </button>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        // Message Modal Component
+        function MessageModal({ expert, onClose }) {
+            const [copied, setCopied] = useState(false);
+
+            const handleCopy = async () => {
+                const success = await copyToClipboard(expert.personalised_message);
+                if (success) {
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                }
+            };
+
+            return (
+                <div className="modal-overlay" onClick={onClose}>
+                    <div className="modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3 className="modal-title">Personalized Message for {expert.name}</h3>
+                            <button className="modal-close" onClick={onClose}>
+                                <Icons.X />
+                            </button>
+                        </div>
+                        <div className="modal-body">
+                            <div className="message-preview">
+                                {expert.personalised_message}
                             </div>
+                        </div>
+                        <div className="modal-footer">
+                            <button className="btn btn-secondary" onClick={onClose}>
+                                Close
+                            </button>
+                            <button className="btn btn-primary" onClick={handleCopy}>
+                                {copied ? <><Icons.Check /> Copied!</> : <><Icons.Copy /> Copy Message</>}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Job Details View Component
+        function JobDetailsView({ job, onBack }) {
+            const [selectedExpertType, setSelectedExpertType] = useState('all');
+            const [selectedExpert, setSelectedExpert] = useState(null);
+
+            const expertTypes = job.raw_outputs?.expert_types || [];
+            const experts = job.experts || [];
+
+            const filteredExperts = selectedExpertType === 'all' 
+                ? experts 
+                : experts.filter(e => e.expert_type === selectedExpertType);
+
+            const getLLMHealth = () => {
+                if (!job.llm_metrics) return { status: 'healthy', label: 'No data' };
+                const successRate = job.llm_metrics.successful_calls / job.llm_metrics.total_calls;
+                if (successRate >= 0.9) return { status: 'healthy', label: 'Healthy' };
+                if (successRate >= 0.7) return { status: 'warning', label: 'Warning' };
+                return { status: 'error', label: 'Error' };
+            };
+
+            const llmHealth = getLLMHealth();
+
+            return (
+                <div className="fade-in">
+                    <a href="#" className="back-nav" onClick={(e) => { e.preventDefault(); onBack(); }}>
+                        <Icons.ArrowLeft />
+                        Back to Jobs
+                    </a>
+
+                    <div className="job-header">
+                        <h1 className="job-title">{job.project_description}</h1>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 16 }}>
+                            <span className={`status-badge status-${job.status}`}>
+                                {job.status}
+                            </span>
+                            {job.llm_metrics && (
+                                <div className="llm-health">
+                                    <div className={`llm-health-dot llm-health-${llmHealth.status}`}></div>
+                                    LLM: {llmHealth.label}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="job-info-grid">
+                        <div className="info-item">
+                            <span className="info-label">Created</span>
+                            <span className="info-value">{formatDate(job.created_at)}</span>
+                        </div>
+                        <div className="info-item">
+                            <span className="info-label">Processing Time</span>
+                            <span className="info-value">{formatDuration(job.processing_time_seconds)}</span>
+                        </div>
+                        <div className="info-item">
+                            <span className="info-label">Total Experts</span>
+                            <span className="info-value">{experts.length}</span>
+                        </div>
+                        <div className="info-item">
+                            <span className="info-label">Expert Types</span>
+                            <span className="info-value">{expertTypes.length}</span>
+                        </div>
+                    </div>
+
+                    {expertTypes.length > 0 && (
+                        <div className="filter-section">
+                            <h3>Filter by Expert Type</h3>
+                            <div className="filter-pills">
+                                <button 
+                                    className={`filter-pill ${selectedExpertType === 'all' ? 'active' : ''}`}
+                                    onClick={() => setSelectedExpertType('all')}
+                                >
+                                    All ({experts.length})
+                                </button>
+                                {expertTypes.map((type, idx) => {
+                                    const count = experts.filter(e => e.expert_type === type.expert_title).length;
+                                    return (
+                                        <button 
+                                            key={idx}
+                                            className={`filter-pill ${selectedExpertType === type.expert_title ? 'active' : ''}`}
+                                            onClick={() => setSelectedExpertType(type.expert_title)}
+                                        >
+                                            {type.expert_title} ({count})
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="experts-grid">
+                        {filteredExperts.map(expert => (
+                            <ExpertCard 
+                                key={expert.id} 
+                                expert={expert}
+                                onShowMessage={setSelectedExpert}
+                            />
+                        ))}
+                    </div>
+
+                    {selectedExpert && (
+                        <MessageModal 
+                            expert={selectedExpert} 
+                            onClose={() => setSelectedExpert(null)} 
+                        />
+                    )}
+                </div>
+            );
+        }
+
+        // Create Job Form Component
+        function CreateJobForm({ onSubmit }) {
+            const [description, setDescription] = useState('');
+            const [effortLevel, setEffortLevel] = useState('medium');
+            const [isSubmitting, setIsSubmitting] = useState(false);
+            const [error, setError] = useState(null);
+
+            const maxLength = 2000;
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                if (!description.trim()) {
+                    setError('Please enter a project description');
+                    return;
+                }
+
+                setIsSubmitting(true);
+                setError(null);
+
+                try {
+                    await onSubmit(description, effortLevel);
+                    setDescription('');
+                    setEffortLevel('medium');
+                } catch (err) {
+                    setError(err.message);
+                } finally {
+                    setIsSubmitting(false);
+                }
+            };
+
+            return (
+                <div className="form-container fade-in">
+                    <div className="card">
+                        <h1>Create Expert Sourcing Request</h1>
+                        <p style={{ color: 'var(--text-secondary)', marginTop: 8 }}>
+                            Describe your project and we'll find the perfect experts for you.
+                        </p>
+
+                        <form onSubmit={handleSubmit} style={{ marginTop: 32 }}>
+                            <div className="form-group">
+                                <label className="form-label">
+                                    Project Description <span className="form-label-required">*</span>
+                                </label>
+                                <textarea
+                                    className="form-textarea"
+                                    placeholder="Describe your project and the type of experts you're looking for..."
+                                    value={description}
+                                    onChange={(e) => setDescription(e.target.value)}
+                                    maxLength={maxLength}
+                                    disabled={isSubmitting}
+                                />
+                                <div className="char-counter">
+                                    {description.length} / {maxLength}
+                                </div>
+                            </div>
+
+                            <div className="form-group">
+                                <label className="form-label">Effort Level</label>
+                                <div className="radio-group">
+                                    {[
+                                        { value: 'low', label: 'Quick Search', description: 'Fast results, ~5 minutes' },
+                                        { value: 'medium', label: 'Standard Search', description: 'Balanced quality, ~10 minutes' },
+                                        { value: 'high', label: 'Comprehensive Search', description: 'Most thorough, ~15 minutes' }
+                                    ].map(option => (
+                                        <label 
+                                            key={option.value} 
+                                            className={`radio-option ${effortLevel === option.value ? 'selected' : ''}`}
+                                        >
+                                            <input
+                                                type="radio"
+                                                name="effortLevel"
+                                                value={option.value}
+                                                checked={effortLevel === option.value}
+                                                onChange={(e) => setEffortLevel(e.target.value)}
+                                                disabled={isSubmitting}
+                                                className="radio-input"
+                                            />
+                                            <div className="radio-content">
+                                                <div className="radio-label">{option.label}</div>
+                                                <div className="radio-description">{option.description}</div>
+                                            </div>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {error && (
+                                <div style={{ 
+                                    padding: 12, 
+                                    background: 'var(--error)', 
+                                    color: 'white', 
+                                    borderRadius: 6,
+                                    marginBottom: 24
+                                }}>
+                                    {error}
+                                </div>
+                            )}
+
+                            <button 
+                                type="submit" 
+                                className="btn btn-primary" 
+                                disabled={isSubmitting || !description.trim()}
+                                style={{ marginTop: 32 }}
+                            >
+                                {isSubmitting ? (
+                                    <>
+                                        <div className="spinner"></div>
+                                        Creating Request...
+                                    </>
+                                ) : (
+                                    'Create Sourcing Request'
+                                )}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            );
+        }
+
+        // Jobs List View Component
+        function JobsListView({ jobs, loading, onSelectJob, onRefresh }) {
+            if (loading) {
+                return <LoadingSkeleton />;
+            }
+
+            if (jobs.length === 0) {
+                return (
+                    <EmptyState 
+                        title="No sourcing jobs yet"
+                        description="Create your first expert sourcing request to get started."
+                        action={null}
+                    />
+                );
+            }
+
+            return (
+                <div className="fade-in">
+                    <div className="jobs-header">
+                        <h1>Expert Sourcing Jobs</h1>
+                        <button className="btn btn-ghost" onClick={onRefresh}>
+                            <Icons.Refresh />
+                            Refresh
+                        </button>
+                    </div>
+                    
+                    <div className="jobs-grid">
+                        {jobs.map(job => (
+                            <JobCard 
+                                key={job.id} 
+                                job={job} 
+                                onClick={() => onSelectJob(job.id)}
+                            />
                         ))}
                     </div>
                 </div>
             );
         }
-        
-        function CreateJobForm({ onSubmit }) {
-            const [projectDescription, setProjectDescription] = useState('');
-            const [effortLevel, setEffortLevel] = useState('low');
-            const [isSubmitting, setIsSubmitting] = useState(false);
-            
-            const handleSubmit = async (e) => {
-                e.preventDefault();
-                if (!projectDescription.trim()) {
-                    alert('Please enter a project description');
-                    return;
-                }
-                
-                setIsSubmitting(true);
+
+        // Main App Component
+        function App() {
+            const [view, setView] = useState('jobs');
+            const [jobs, setJobs] = useState([]);
+            const [loading, setLoading] = useState(true);
+            const [selectedJobId, setSelectedJobId] = useState(null);
+            const [jobDetails, setJobDetails] = useState(null);
+            const [toast, setToast] = useState(null);
+            const pollingInterval = useRef(null);
+
+            const loadJobs = useCallback(async () => {
                 try {
-                    // Pass effort level to the API
-                    await onSubmit(projectDescription, effortLevel);
-                    
-                    // Reset form
-                    setProjectDescription('');
-                    setEffortLevel('low');
+                    const response = await fetch('/api/v1/jobs');
+                    if (!response.ok) throw new Error('Failed to load jobs');
+                    const data = await response.json();
+                    setJobs(data.jobs || []);
+                } catch (error) {
+                    console.error('Error loading jobs:', error);
+                    setToast({ message: 'Failed to load jobs', type: 'error' });
                 } finally {
-                    setIsSubmitting(false);
+                    setLoading(false);
+                }
+            }, []);
+
+            const loadJobDetails = useCallback(async (jobId) => {
+                setLoading(true);
+                try {
+                    const response = await fetch(`/api/v1/source/${jobId}`);
+                    if (!response.ok) throw new Error('Failed to load job details');
+                    const data = await response.json();
+                    setJobDetails(data);
+                    setView('details');
+                } catch (error) {
+                    console.error('Error loading job details:', error);
+                    setToast({ message: 'Failed to load job details', type: 'error' });
+                } finally {
+                    setLoading(false);
+                }
+            }, []);
+
+            const createJob = async (description, effortLevel) => {
+                try {
+                    const response = await fetch('/api/v1/source', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ project_description: description })
+                    });
+                    
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.message || 'Failed to create job');
+                    }
+                    
+                    const data = await response.json();
+                    setToast({ message: 'Expert sourcing request created successfully!', type: 'success' });
+                    setView('jobs');
+                    loadJobs();
+                } catch (error) {
+                    throw error;
                 }
             };
-            
-            return (
-                <div className="create-job-form">
-                    <h2 style={{ marginBottom: '30px' }}>Create New Expert Sourcing Job</h2>
+
+            const handleSelectJob = (jobId) => {
+                setSelectedJobId(jobId);
+                loadJobDetails(jobId);
+            };
+
+            const handleBackToJobs = () => {
+                setView('jobs');
+                setSelectedJobId(null);
+                setJobDetails(null);
+                loadJobs();
+            };
+
+            // Initial load
+            useEffect(() => {
+                if (view === 'jobs') {
+                    loadJobs();
+                }
+            }, [view, loadJobs]);
+
+            // Auto-refresh for processing jobs
+            useEffect(() => {
+                if (view === 'jobs') {
+                    const hasProcessingJobs = jobs.some(job => job.status === 'processing');
                     
-                    <form onSubmit={handleSubmit}>
-                        <div className="form-group">
-                            <label className="form-label" htmlFor="project-description">
-                                Project Description
-                            </label>
-                            <textarea
-                                id="project-description"
-                                className="form-textarea"
-                                value={projectDescription}
-                                onChange={(e) => setProjectDescription(e.target.value)}
-                                placeholder="Describe your project in detail. Include the technology stack, business goals, and specific expertise you're looking for..."
-                                required
-                            />
+                    if (hasProcessingJobs) {
+                        pollingInterval.current = setInterval(loadJobs, 5000);
+                    }
+                    
+                    return () => {
+                        if (pollingInterval.current) {
+                            clearInterval(pollingInterval.current);
+                        }
+                    };
+                }
+            }, [jobs, view, loadJobs]);
+
+            return (
+                <>
+                    <header className="header">
+                        <div className="header-content">
+                            <div className="logo">Expert Contacts</div>
+                            <nav>
+                                <button 
+                                    className="btn btn-primary"
+                                    onClick={() => setView('create')}
+                                >
+                                    <Icons.Plus />
+                                    New Request
+                                </button>
+                            </nav>
                         </div>
-                        
-                        <div className="form-group">
-                            <label className="form-label">
-                                Search Effort Level
-                            </label>
-                            <div className="effort-selector">
-                                <div 
-                                    className={`effort-option ${effortLevel === 'low' ? 'selected' : ''}`}
-                                    onClick={() => setEffortLevel('low')}
-                                >
-                                    <h4>Low</h4>
-                                    <p>Quick search (5 min)</p>
-                                    <p style={{ fontSize: '12px' }}>Basic reasoning & search</p>
-                                </div>
-                                <div 
-                                    className={`effort-option ${effortLevel === 'medium' ? 'selected' : ''}`}
-                                    onClick={() => setEffortLevel('medium')}
-                                >
-                                    <h4>Medium</h4>
-                                    <p>Standard search (10 min)</p>
-                                    <p style={{ fontSize: '12px' }}>Enhanced analysis</p>
-                                </div>
-                                <div 
-                                    className={`effort-option ${effortLevel === 'high' ? 'selected' : ''}`}
-                                    onClick={() => setEffortLevel('high')}
-                                >
-                                    <h4>High</h4>
-                                    <p>Deep search (15 min)</p>
-                                    <p style={{ fontSize: '12px' }}>Comprehensive results</p>
-                                </div>
-                            </div>
+                    </header>
+
+                    <main className="main-container">
+                        <div className="content-wrapper">
+                            {view === 'jobs' && (
+                                <>
+                                    <div className="nav-tabs">
+                                        <button className="nav-tab active">
+                                            All Jobs
+                                        </button>
+                                    </div>
+                                    <JobsListView 
+                                        jobs={jobs}
+                                        loading={loading}
+                                        onSelectJob={handleSelectJob}
+                                        onRefresh={loadJobs}
+                                    />
+                                </>
+                            )}
+
+                            {view === 'details' && jobDetails && (
+                                <JobDetailsView 
+                                    job={jobDetails}
+                                    onBack={handleBackToJobs}
+                                />
+                            )}
+
+                            {view === 'create' && (
+                                <CreateJobForm 
+                                    onSubmit={createJob}
+                                />
+                            )}
                         </div>
-                        
-                        <button 
-                            type="submit" 
-                            className="form-submit"
-                            disabled={isSubmitting}
-                        >
-                            {isSubmitting ? 'Creating Job...' : 'Create Expert Sourcing Job'}
-                        </button>
-                    </form>
-                </div>
+                    </main>
+
+                    {toast && (
+                        <Toast 
+                            message={toast.message}
+                            type={toast.type}
+                            onClose={() => setToast(null)}
+                        />
+                    )}
+                </>
             );
         }
-        
-        ReactDOM.render(<App />, document.getElementById('root'));
+
+        // Render the app
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
     </script>
 </body>
 </html>

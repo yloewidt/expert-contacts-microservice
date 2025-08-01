@@ -79,13 +79,14 @@ psql -U postgres -d expert_contacts -f migrations/001_initial_schema.sql
 
 ### Deployment
 ```bash
-# Deploy to Cloud Run (after building Docker image)
+# Fast deployment using source-based builds (recommended)
+./deploy.sh
+
+# Manual deployment with Docker
+docker build -t expert-contacts .
 gcloud run deploy expert-contacts-api \
   --image REGION-docker.pkg.dev/PROJECT_ID/REPOSITORY/expert-contacts:latest \
   --region REGION
-
-# Build Docker image
-docker build -t expert-contacts .
 ```
 
 ## Architecture Overview
@@ -101,19 +102,20 @@ This is an AI-powered expert discovery microservice built on Google Cloud Platfo
 
 2. **Service Layer** (`src/services/`)
    - **OpenAIService** (`openai.ts`): Handles LLM interactions for expert type generation, search prompts, and expert discovery using GPT-4o and o3 models
-   - **ExpertAggregatorService** (`expertAggregator.ts`): Deduplicates and scores expert matches
+   - **ExpertAggregatorService** (`expertAggregator.ts`): Deduplicates and scores expert matches using intelligent LLM-based matching
    - **CloudTasksService** (`cloudTasks.ts`): Manages asynchronous job processing
    - **CloudStorageService** (`cloudStorage.ts`): Handles raw output storage in GCS
 
 3. **Data Layer**
    - **Database** model (`src/models/database.ts`): PostgreSQL interface using pg library with connection pooling
    - Schema includes: expert_sourcing_requests, experts, expert_request_matches, expert_sourcing_raw_outputs
-   - Cloud SQL support with Unix socket connections
+   - Cloud SQL support with Unix socket connections when CLOUD_SQL_CONNECTION_NAME is set
 
 ### Key API Endpoints
 
 - `POST /api/v1/source`: Initiates expert discovery (validates with Joi, creates DB record, returns 202)
 - `GET /api/v1/source/:id`: Retrieves sourcing request status and results with aggregated experts
+- `GET /api/v1/jobs`: Lists all sourcing jobs
 - Additional routes for internal operations, debugging, and job management
 
 ### Technology Stack
@@ -126,6 +128,7 @@ This is an AI-powered expert discovery microservice built on Google Cloud Platfo
 - **Logging**: Pino with structured logging
 - **Testing**: Jest with ts-jest preset
 - **Build**: TypeScript compiler with UI file copying
+- **UI**: React 18 with in-browser Babel transpilation
 
 ### Important Configuration
 
@@ -141,5 +144,28 @@ The expert sourcing workflow follows these steps:
 1. Generate expert types using GPT-4o based on project description
 2. Create search prompts for each expert type
 3. Execute parallel searches using o3 model with web search enabled
-4. Aggregate and deduplicate results based on LinkedIn URLs
+4. Aggregate and deduplicate results based on LinkedIn URLs using LLM-based intelligent matching
 5. Calculate final relevance scores and persist to database
+
+## UI Development
+
+The UI is a single-page React application served from `src/ui/index.html`:
+- Uses React 18 with in-browser Babel transpilation
+- No build step required for UI changes
+- Fetches data from `/api/v1/jobs` endpoint
+- Displays job status, expert results, and personalized messages
+- Includes notification system and copy-to-clipboard functionality
+
+## Testing Strategy
+
+- Unit tests for services (e.g., `tests/services/expertAggregator.test.ts`)
+- Tests use Jest with TypeScript support
+- Mock external dependencies (OpenAI, GCP services)
+- Run specific tests with: `npm test -- tests/services/expertAggregator.test.ts`
+
+## Deployment Notes
+
+- Use `./deploy.sh` for fast source-based deployments to Cloud Run
+- The script uses gcloud path: `/Users/yonatanloewidt/google-cloud-sdk/bin/gcloud`
+- Deployment includes all environment variables and secrets configuration
+- Service URL format: `https://expert-contacts-service-[BUILD_ID].us-central1.run.app/`
