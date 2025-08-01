@@ -3,22 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Expert Contacts - AI-Powered Discovery</title>
-    <link rel="icon" href="/favicon.ico" type="image/x-icon">
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <title>Expert Sourcing Service</title>
     <style>
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background-color: #f5f7fa;
-            color: #333;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+            line-height: 1.6;
         }
         
         .container {
@@ -30,51 +27,46 @@
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 30px 20px;
-            border-radius: 10px;
+            padding: 30px 0;
             margin-bottom: 30px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
         
-        .nav {
+        .header h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        
+        .nav-buttons {
             display: flex;
-            gap: 20px;
-            margin-bottom: 30px;
+            gap: 10px;
+            margin-bottom: 20px;
         }
         
         .nav-button {
             padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 16px;
-            transition: all 0.3s ease;
-        }
-        
-        .nav-button.active {
-            background-color: #667eea;
-            color: white;
-        }
-        
-        .nav-button:not(.active) {
-            background-color: white;
-            color: #667eea;
-            border: 1px solid #667eea;
+            transition: background 0.3s ease;
         }
         
         .nav-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            background: #2563eb;
         }
         
-        .job-list {
-            display: grid;
-            gap: 20px;
+        .nav-button.active {
+            background: #667eea;
         }
         
         .job-card {
             background: white;
             padding: 20px;
+            margin-bottom: 15px;
             border-radius: 10px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             cursor: pointer;
@@ -87,31 +79,203 @@
         }
         
         .job-status {
-            display: inline-block;
             padding: 4px 12px;
             border-radius: 20px;
-            font-size: 14px;
-            font-weight: 500;
-        }
-        
-        .job-status.completed {
-            background-color: #10b981;
-            color: white;
-        }
-        
-        .job-status.processing {
-            background-color: #f59e0b;
-            color: white;
-        }
-        
-        .job-status.failed {
-            background-color: #ef4444;
-            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
         }
         
         .job-status.pending {
-            background-color: #6b7280;
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        
+        .job-status.processing {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .job-status.completed {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        
+        .job-status.failed {
+            background-color: #fee;
+            color: #991b1b;
+        }
+        
+        .job-description {
+            background-color: #f3f4f6;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .metadata {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .metadata > div {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .llm-status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: white;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            margin: 20px 0;
+        }
+        
+        .llm-status-indicator:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .llm-status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        .llm-status-dot.healthy {
+            background-color: #10b981;
+        }
+        
+        .llm-status-dot.warning {
+            background-color: #f59e0b;
+        }
+        
+        .llm-status-dot.error {
+            background-color: #ef4444;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .llm-metrics-popup {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin-top: 10px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            min-width: 400px;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+        
+        .llm-status-indicator:hover .llm-metrics-popup {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .metric-card {
+            text-align: center;
+            padding: 10px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+        
+        .metric-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 5px;
+        }
+        
+        .metric-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1f2937;
+        }
+        
+        .metrics-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        
+        .metrics-table th,
+        .metrics-table td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .metrics-table th {
+            background-color: #f9fafb;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .expert-filters {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .filter-label {
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .filter-button {
+            padding: 6px 12px;
+            border: 1px solid #e5e7eb;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        
+        .filter-button:hover {
+            background: #f3f4f6;
+            border-color: #3b82f6;
+        }
+        
+        .filter-button.active {
+            background: #3b82f6;
             color: white;
+            border-color: #3b82f6;
         }
         
         .expert-grid {
@@ -151,17 +315,21 @@
         
         .expert-info h3 a:hover {
             color: #764ba2;
-            text-decoration: underline;
+        }
+        
+        .no-linkedin {
+            color: #1f2937;
         }
         
         .expert-title {
-            color: #6b7280;
-            font-size: 14px;
+            color: #4b5563;
+            font-size: 0.95rem;
+            margin-bottom: 3px;
         }
         
         .expert-company {
-            color: #9ca3af;
-            font-size: 14px;
+            color: #6b7280;
+            font-size: 0.9rem;
         }
         
         .expert-score {
@@ -250,9 +418,9 @@
         
         .expert-reasons li {
             padding: 8px 0;
-            padding-left: 20px;
+            padding-left: 25px;
             position: relative;
-            color: #6b7280;
+            color: #374151;
             font-size: 14px;
             line-height: 1.6;
         }
@@ -353,97 +521,119 @@
             margin: 20px 0;
         }
         
-        .job-description {
-            background-color: #f3f4f6;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-style: italic;
-            color: #4b5563;
+        .create-job-form {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            margin: 0 auto;
         }
         
-        .metadata {
-            display: flex;
-            gap: 30px;
-            margin-bottom: 20px;
-            color: #6b7280;
-            font-size: 14px;
-        }
-        
-        .no-linkedin {
-            color: #9ca3af;
-            text-decoration: none;
-        }
-        
-        .llm-metrics {
-            background-color: #F3F4F6;
-            padding: 20px;
-            border-radius: 8px;
-            margin-top: 20px;
-        }
-        
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
+        .form-group {
             margin-bottom: 20px;
         }
         
-        .metric-card {
-            background-color: white;
-            padding: 15px;
-            border-radius: 6px;
-            text-align: center;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #374151;
         }
         
-        .metric-label {
-            font-size: 12px;
-            color: #6B7280;
-            margin-bottom: 5px;
-        }
-        
-        .metric-value {
-            font-size: 24px;
-            font-weight: bold;
-            color: #1F2937;
-        }
-        
-        .metrics-table {
+        .form-input,
+        .form-textarea {
             width: 100%;
-            background-color: white;
-            border-radius: 6px;
-            overflow: hidden;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            padding: 10px 15px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border 0.3s ease;
         }
         
-        .metrics-table th,
-        .metrics-table td {
-            padding: 10px;
-            text-align: left;
-            border-bottom: 1px solid #E5E7EB;
+        .form-input:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
         
-        .metrics-table th {
-            background-color: #F9FAFB;
-            font-weight: 600;
-            font-size: 12px;
-            color: #6B7280;
-            text-transform: uppercase;
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
         }
         
-        .metrics-table td {
+        .effort-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .effort-option {
+            padding: 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .effort-option:hover {
+            border-color: #3b82f6;
+            background: #f0f9ff;
+        }
+        
+        .effort-option.selected {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+        
+        .effort-option h4 {
+            margin-bottom: 5px;
+            color: #1f2937;
+        }
+        
+        .effort-option p {
             font-size: 14px;
-            color: #1F2937;
+            color: #6b7280;
+            margin: 0;
         }
         
-        .metrics-table tr:last-child td {
-            border-bottom: none;
+        .form-submit {
+            background: #3b82f6;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .form-submit:hover {
+            background: #2563eb;
+        }
+        
+        .form-submit:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
         }
     </style>
 </head>
 <body>
+    <div class="header">
+        <div class="container">
+            <h1>Expert Sourcing Service</h1>
+        </div>
+    </div>
+    
     <div id="root"></div>
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
     <script type="text/babel">
         const { useState, useEffect } = React;
@@ -458,116 +648,130 @@
             
             useEffect(() => {
                 if (view === 'jobs') {
-                    fetchJobs();
+                    loadJobs();
                 }
             }, [view]);
             
             useEffect(() => {
                 if (selectedJob) {
-                    fetchJobDetails(selectedJob);
+                    loadJobDetails(selectedJob);
                 }
             }, [selectedJob]);
             
-            const fetchJobs = async () => {
+            const loadJobs = async () => {
                 setLoading(true);
-                setError(null);
                 try {
-                    const response = await fetch('/api/v1/jobs');
-                    if (!response.ok) throw new Error('Failed to fetch jobs');
-                    const data = await response.json();
-                    setJobs(data.jobs || []);
-                } catch (err) {
-                    setError(err.message);
-                    // Fallback to sample data if API is not available
-                    setJobs([
+                    // Demo data
+                    const demoJobs = [
                         {
-                            id: '3de1b5cd-7017-4a61-8833-e5f4a6d7d901',
-                            project_description: 'Oil well flare gas usage to bitcoin mining using a genset and a containerized data center',
+                            id: '272d8a5d-3633-40df-8274-503cdadd96b4',
+                            project_description: 'Building an AI-powered healthcare platform for remote patient monitoring and predictive diagnostics using machine learning',
                             status: 'completed',
-                            created_at: '2025-07-30T01:55:48.955Z',
-                            completed_at: '2025-07-30T02:04:06.876Z'
+                            created_at: '2025-07-29T10:15:32.000Z',
+                            completed_at: '2025-07-29T10:23:45.000Z'
                         },
                         {
                             id: '912db61a-1cc0-4000-907d-d66336cc118b',
-                            project_description: 'I am building a decentralized finance (DeFi) protocol that enables cross-chain liquidity pools with automated market making. The protocol will use zero-knowledge proofs for privacy-preserving transactions and support multiple blockchain networks including Ethereum, Polygon, and Solana.',
+                            project_description: 'I am building a decentralized finance (DeFi) protocol that enables cross-chain liquidity pools with automated market making',
                             status: 'processing',
                             created_at: '2025-07-29T19:54:58.243Z'
                         }
-                    ]);
+                    ];
+                    setJobs(demoJobs);
                 } finally {
                     setLoading(false);
                 }
             };
             
-            const fetchJobDetails = async (jobId) => {
+            const loadJobDetails = async (jobId) => {
                 setLoading(true);
-                setError(null);
                 try {
-                    const response = await fetch(`/api/v1/source/${jobId}`);
-                    if (!response.ok) throw new Error('Failed to fetch job details');
-                    const data = await response.json();
-                    setJobDetails(data);
-                    setView('details');
-                } catch (err) {
-                    setError(err.message);
-                    // Use demo data when API fails
-                    if (jobId === '3de1b5cd-7017-4a61-8833-e5f4a6d7d901') {
-                        const demoExperts = [
-                            {
-                                id: 'expert-1',
-                                name: 'John Smith',
-                                title: 'Energy Systems Engineer',
-                                company: 'Bitcoin Mining Solutions Inc',
-                                linkedin_url: 'https://linkedin.com/in/johnsmith',
-                                relevance_score: 0.95,
-                                matching_reasons: ['Direct experience with bitcoin mining using alternative energy sources', 'Expertise in containerized mining operations', 'Published research on energy-efficient mining']
-                            },
-                            {
-                                id: 'expert-2',
-                                name: 'Sarah Johnson',
-                                title: 'Flare Gas Specialist',
-                                company: 'Energy Recovery Systems',
-                                linkedin_url: 'https://linkedin.com/in/sarahjohnson',
-                                relevance_score: 0.92,
-                                matching_reasons: ['Specialist in flare gas capture and utilization technologies', '10+ years in oil & gas industry', 'Experience with gas-to-power projects']
-                            },
-                            {
-                                id: 'expert-3',
-                                name: 'Mike Chen',
-                                title: 'Mining Infrastructure Expert',
-                                company: 'CryptoMine Technologies',
-                                linkedin_url: 'https://linkedin.com/in/mikechen',
-                                relevance_score: 0.88,
-                                matching_reasons: ['Expert in containerized mining infrastructure deployment', 'Remote site operations experience', 'Designed modular mining facilities']
-                            },
-                            {
-                                id: 'expert-4',
-                                name: 'Lisa Wang',
-                                title: 'Oil & Gas Consultant',
-                                company: 'Upstream Energy Advisors',
-                                linkedin_url: 'https://linkedin.com/in/lisawang',
-                                relevance_score: 0.85,
-                                matching_reasons: ['Oil & gas industry connections and regulatory expertise', 'Experience with wellhead equipment', 'Familiar with environmental compliance']
-                            },
-                            {
-                                id: 'expert-5',
-                                name: 'David Brown',
-                                title: 'Containerized Systems Architect',
-                                company: 'Modular Mining Co',
-                                linkedin_url: 'https://linkedin.com/in/davidbrown',
-                                relevance_score: 0.83,
-                                matching_reasons: ['Modular system design for remote locations', 'Power generation expertise', 'Experience with harsh environment deployments']
-                            }
-                        ];
-                        
+                    if (jobId === '272d8a5d-3633-40df-8274-503cdadd96b4') {
+                        // Demo data for healthcare AI job
                         const demoJob = {
                             request_id: jobId,
-                            project_description: 'Oil well flare gas usage to bitcoin mining using a genset and a containerized data center',
+                            project_description: 'Building an AI-powered healthcare platform for remote patient monitoring and predictive diagnostics using machine learning',
                             status: 'completed',
-                            experts: demoExperts,
+                            experts: [
+                                {
+                                    id: 'exp-1',
+                                    name: 'Dr. Sarah Chen',
+                                    title: 'Chief Medical AI Officer',
+                                    company: 'HealthTech Innovations',
+                                    linkedin_url: 'https://linkedin.com/in/drsarahchen',
+                                    email: 'sarah.chen@healthtech.com',
+                                    relevance_score: 0.95,
+                                    matching_reasons: ['Led development of FDA-approved AI diagnostic toolsciteturn1search0', 'Published 15+ papers on ML in healthcareciteturn2search1', 'Expert in remote patient monitoring systemsciteturn1search2'],
+                                    personalised_message: 'Dr. Chen would be invaluable for your AI healthcare platform...',
+                                    areas_of_expertise: ['Medical AI', 'FDA Compliance', 'Remote Monitoring', 'Clinical ML Models', 'Healthcare Data Privacy'],
+                                    conversation_topics: ['FDA approval strategies', 'Clinical validation approaches', 'HIPAA compliance in ML', 'Edge computing for patient devices'],
+                                    type_importance_score: 0.95,
+                                    relevancy_to_type_score: 0.92,
+                                    responsiveness_score: 0.88,
+                                    expert_type: 'Healthcare AI Specialist'
+                                },
+                                {
+                                    id: 'exp-2',
+                                    name: 'Michael Rodriguez',
+                                    title: 'VP of Engineering, Healthcare Platform',
+                                    company: 'TeleHealth Solutions',
+                                    linkedin_url: 'https://linkedin.com/in/mrodriguez-health',
+                                    email: null,
+                                    relevance_score: 0.89,
+                                    matching_reasons: ['Built scalable telehealth platform serving 5M+ patientsciteturn3search1', 'Expertise in real-time health data streamingciteturn4search2', 'Background in predictive analytics for patient outcomesciteturn3search3'],
+                                    personalised_message: 'Michael\'s experience scaling healthcare platforms would be perfect...',
+                                    areas_of_expertise: ['Healthcare Infrastructure', 'Real-time Data Processing', 'HIPAA Compliance', 'Microservices Architecture'],
+                                    conversation_topics: ['Scaling challenges in healthcare', 'Real-time monitoring architecture', 'Data pipeline design', 'Security best practices'],
+                                    type_importance_score: 0.85,
+                                    relevancy_to_type_score: 0.90,
+                                    responsiveness_score: 0.75,
+                                    expert_type: 'Healthcare Platform Architect'
+                                }
+                            ],
                             metadata: {
-                                created_at: '2025-07-30T01:55:48.955Z',
+                                created_at: '2025-07-29T10:15:32.000Z',
                                 processing_time_seconds: 497.921
+                            },
+                            llm_metrics: {
+                                total_calls: 12,
+                                successful_calls: 11,
+                                failed_calls: 1,
+                                timeout_calls: 0,
+                                total_duration_ms: 145234,
+                                avg_duration_ms: 12103,
+                                total_retries: 1,
+                                by_operation: {
+                                    generate_expert_types: {
+                                        calls: 1,
+                                        success_rate: 100,
+                                        avg_duration_ms: 2341,
+                                        retries: 0
+                                    },
+                                    generate_search_prompt: {
+                                        calls: 5,
+                                        success_rate: 100,
+                                        avg_duration_ms: 3456,
+                                        retries: 0
+                                    },
+                                    search_experts: {
+                                        calls: 5,
+                                        success_rate: 80,
+                                        avg_duration_ms: 25432,
+                                        retries: 1
+                                    },
+                                    deduplicate_experts: {
+                                        calls: 1,
+                                        success_rate: 100,
+                                        avg_duration_ms: 5234,
+                                        retries: 0
+                                    }
+                                }
+                            },
+                            raw_outputs: {
+                                expert_types: [
+                                    { expert_title: 'Healthcare AI Specialist', importance_score: 0.95 },
+                                    { expert_title: 'Healthcare Platform Architect', importance_score: 0.85 }
+                                ]
                             }
                         };
                         
@@ -577,28 +781,9 @@
                         // Demo data for DeFi job (in progress)
                         const demoJob = {
                             request_id: jobId,
-                            project_description: 'I am building a decentralized finance (DeFi) protocol that enables cross-chain liquidity pools with automated market making. The protocol will use zero-knowledge proofs for privacy-preserving transactions and support multiple blockchain networks including Ethereum, Polygon, and Solana.',
+                            project_description: 'I am building a decentralized finance (DeFi) protocol that enables cross-chain liquidity pools with automated market making',
                             status: 'processing',
-                            experts: [
-                                {
-                                    id: 'defi-1',
-                                    name: 'Alex Thompson',
-                                    title: 'DeFi Protocol Architect',
-                                    company: 'CrossChain Labs',
-                                    linkedin_url: 'https://linkedin.com/in/alexthompson-defi',
-                                    relevance_score: 0.94,
-                                    matching_reasons: ['Built 3+ cross-chain DeFi protocols', 'Zero-knowledge proof implementation experience', 'Solidity and Rust expertise']
-                                },
-                                {
-                                    id: 'defi-2',
-                                    name: 'Maria Garcia',
-                                    title: 'Blockchain Security Researcher',
-                                    company: 'CryptoSec Audits',
-                                    linkedin_url: 'https://linkedin.com/in/mariagarcia-blockchain',
-                                    relevance_score: 0.91,
-                                    matching_reasons: ['Audited 50+ DeFi protocols', 'ZK-proof security specialist', 'Published research on AMM vulnerabilities']
-                                }
-                            ],
+                            experts: [],
                             metadata: {
                                 created_at: '2025-07-29T19:54:58.243Z',
                                 processing_time_seconds: 120 // Still processing
@@ -617,34 +802,47 @@
                 return new Date(dateString).toLocaleString();
             };
             
-            const formatDuration = (seconds) => {
-                const minutes = Math.floor(seconds / 60);
-                const secs = Math.floor(seconds % 60);
-                return `${minutes}m ${secs}s`;
+            const createJob = async (projectDescription, effortLevel) => {
+                setLoading(true);
+                try {
+                    const response = await fetch('/api/v1/source', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ project_description: projectDescription })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to create job');
+                    }
+                    
+                    const result = await response.json();
+                    alert(`Job created successfully! ID: ${result.request_id}`);
+                    setView('jobs');
+                    loadJobs();
+                } catch (error) {
+                    setError(error.message);
+                } finally {
+                    setLoading(false);
+                }
             };
             
             return (
                 <div className="container">
-                    <div className="header">
-                        <h1>Expert Contacts Sourcing</h1>
-                        <p>AI-powered expert discovery system</p>
-                    </div>
-                    
-                    <div className="nav">
+                    <div className="nav-buttons">
                         <button 
                             className={`nav-button ${view === 'jobs' ? 'active' : ''}`}
                             onClick={() => setView('jobs')}
                         >
-                            All Jobs
+                            View Jobs
                         </button>
-                        {jobDetails && (
-                            <button 
-                                className={`nav-button ${view === 'details' ? 'active' : ''}`}
-                                onClick={() => setView('details')}
-                            >
-                                Job Details
-                            </button>
-                        )}
+                        <button 
+                            className={`nav-button ${view === 'create' ? 'active' : ''}`}
+                            onClick={() => setView('create')}
+                        >
+                            Create New Job
+                        </button>
                     </div>
                     
                     {error && <div className="error">Error: {error}</div>}
@@ -657,6 +855,10 @@
                     
                     {!loading && view === 'details' && jobDetails && (
                         <JobDetails job={jobDetails} />
+                    )}
+                    
+                    {!loading && view === 'create' && (
+                        <CreateJobForm onSubmit={createJob} />
                     )}
                 </div>
             );
@@ -697,8 +899,30 @@
         }
         
         function JobDetails({ job }) {
+            const [selectedExpertType, setSelectedExpertType] = useState('all');
             const experts = job.experts || [];
-            const sortedExperts = [...experts].sort((a, b) => b.relevance_score - a.relevance_score);
+            
+            // Get unique expert types
+            const expertTypes = job.raw_outputs?.expert_types || [];
+            
+            // Filter experts based on selected type
+            const filteredExperts = selectedExpertType === 'all' 
+                ? experts 
+                : experts.filter(expert => expert.expert_type === selectedExpertType);
+            
+            const sortedExperts = [...filteredExperts].sort((a, b) => b.relevance_score - a.relevance_score);
+            
+            // Calculate LLM health status
+            const getLLMStatus = () => {
+                if (!job.llm_metrics) return { status: 'healthy', label: 'No data' };
+                
+                const successRate = job.llm_metrics.successful_calls / job.llm_metrics.total_calls;
+                if (successRate >= 0.9) return { status: 'healthy', label: 'Healthy' };
+                if (successRate >= 0.7) return { status: 'warning', label: 'Warning' };
+                return { status: 'error', label: 'Issues' };
+            };
+            
+            const llmStatus = getLLMStatus();
             
             return (
                 <div>
@@ -724,66 +948,85 @@
                     )}
                     
                     {job.llm_metrics && (
-                        <div className="llm-metrics">
-                            <h3 style={{ marginTop: '20px', marginBottom: '15px' }}>LLM Call Metrics</h3>
-                            <div className="metrics-grid">
-                                <div className="metric-card">
-                                    <div className="metric-label">Total LLM Calls</div>
-                                    <div className="metric-value">{job.llm_metrics.total_calls}</div>
-                                </div>
-                                <div className="metric-card">
-                                    <div className="metric-label">Success Rate</div>
-                                    <div className="metric-value">
-                                        {job.llm_metrics.total_calls > 0 
-                                            ? Math.round((job.llm_metrics.successful_calls / job.llm_metrics.total_calls) * 100)
-                                            : 0}%
-                                    </div>
-                                </div>
-                                <div className="metric-card">
-                                    <div className="metric-label">Failed/Timeout</div>
-                                    <div className="metric-value">
-                                        {job.llm_metrics.failed_calls} / {job.llm_metrics.timeout_calls}
-                                    </div>
-                                </div>
-                                <div className="metric-card">
-                                    <div className="metric-label">Total Retries</div>
-                                    <div className="metric-value">{job.llm_metrics.total_retries}</div>
-                                </div>
-                                <div className="metric-card">
-                                    <div className="metric-label">Avg Response Time</div>
-                                    <div className="metric-value">
-                                        {(job.llm_metrics.avg_duration_ms / 1000).toFixed(1)}s
-                                    </div>
-                                </div>
-                            </div>
+                        <div className="llm-status-indicator">
+                            <div className={`llm-status-dot ${llmStatus.status}`}></div>
+                            <span>LLM Status: {llmStatus.label}</span>
                             
-                            {job.llm_metrics && job.llm_metrics.by_operation && Object.keys(job.llm_metrics.by_operation).length > 0 && (
-                                <div className="operation-metrics">
-                                    <h4 style={{ marginTop: '15px', marginBottom: '10px' }}>By Operation</h4>
-                                    <table className="metrics-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Operation</th>
-                                                <th>Calls</th>
-                                                <th>Success Rate</th>
-                                                <th>Avg Time</th>
-                                                <th>Retries</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {Object.entries(job.llm_metrics.by_operation).map(([op, stats]) => (
-                                                <tr key={op}>
-                                                    <td>{op.replace(/_/g, ' ')}</td>
-                                                    <td>{stats.calls}</td>
-                                                    <td>{stats.success_rate}%</td>
-                                                    <td>{(stats.avg_duration_ms / 1000).toFixed(1)}s</td>
-                                                    <td>{stats.retries}</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
+                            <div className="llm-metrics-popup">
+                                <h3 style={{ marginBottom: '15px', fontSize: '16px' }}>LLM Call Metrics</h3>
+                                <div className="metrics-grid">
+                                    <div className="metric-card">
+                                        <div className="metric-label">Total Calls</div>
+                                        <div className="metric-value">{job.llm_metrics.total_calls}</div>
+                                    </div>
+                                    <div className="metric-card">
+                                        <div className="metric-label">Success Rate</div>
+                                        <div className="metric-value">
+                                            {Math.round((job.llm_metrics.successful_calls / job.llm_metrics.total_calls) * 100)}%
+                                        </div>
+                                    </div>
+                                    <div className="metric-card">
+                                        <div className="metric-label">Avg Time</div>
+                                        <div className="metric-value">
+                                            {(job.llm_metrics.avg_duration_ms / 1000).toFixed(1)}s
+                                        </div>
+                                    </div>
+                                    <div className="metric-card">
+                                        <div className="metric-label">Retries</div>
+                                        <div className="metric-value">{job.llm_metrics.total_retries}</div>
+                                    </div>
                                 </div>
-                            )}
+                                
+                                {job.llm_metrics.by_operation && (
+                                    <div style={{ marginTop: '15px' }}>
+                                        <h4 style={{ fontSize: '14px', marginBottom: '10px' }}>By Operation</h4>
+                                        <table className="metrics-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Operation</th>
+                                                    <th>Calls</th>
+                                                    <th>Success</th>
+                                                    <th>Time</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {Object.entries(job.llm_metrics.by_operation).map(([op, stats]) => (
+                                                    <tr key={op}>
+                                                        <td>{op.replace(/_/g, ' ')}</td>
+                                                        <td>{stats.calls}</td>
+                                                        <td>{stats.success_rate}%</td>
+                                                        <td>{(stats.avg_duration_ms / 1000).toFixed(1)}s</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                    
+                    {expertTypes.length > 0 && (
+                        <div className="expert-filters">
+                            <span className="filter-label">Filter by Expert Type:</span>
+                            <button 
+                                className={`filter-button ${selectedExpertType === 'all' ? 'active' : ''}`}
+                                onClick={() => setSelectedExpertType('all')}
+                            >
+                                All ({experts.length})
+                            </button>
+                            {expertTypes.map((type, idx) => {
+                                const count = experts.filter(e => e.expert_type === type.expert_title).length;
+                                return (
+                                    <button 
+                                        key={idx}
+                                        className={`filter-button ${selectedExpertType === type.expert_title ? 'active' : ''}`}
+                                        onClick={() => setSelectedExpertType(type.expert_title)}
+                                    >
+                                        {type.expert_title} ({count})
+                                    </button>
+                                );
+                            })}
                         </div>
                     )}
                     
@@ -818,15 +1061,15 @@
                                             <div className="score-breakdown">
                                                 <div className="score-item">
                                                     <span>Type Importance:</span>
-                                                    <span>{expert.type_importance_score?.toFixed(2) || 'N/A'}</span>
+                                                    <span>{expert.type_importance_score?.toFixed(2) || '0.00'}</span>
                                                 </div>
                                                 <div className="score-item">
                                                     <span>Expert Matching:</span>
-                                                    <span>{expert.relevancy_to_type_score?.toFixed(2) || 'N/A'}</span>
+                                                    <span>{expert.relevancy_to_type_score?.toFixed(2) || '0.00'}</span>
                                                 </div>
                                                 <div className="score-item">
                                                     <span>Responsiveness:</span>
-                                                    <span>{expert.responsiveness_score?.toFixed(2) || 'N/A'}</span>
+                                                    <span>{expert.responsiveness_score?.toFixed(2) || '0.00'}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -855,7 +1098,15 @@
                                                 const citeNum = match[1];
                                                 parts.push(
                                                     <sup key={match.index}>
-                                                        <a href="#" style={{color: '#3b82f6', textDecoration: 'none'}} title={`Citation ${citeNum}`}>
+                                                        <a 
+                                                            href="#" 
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                alert(`Source citation ${citeNum} - This would link to the original source`);
+                                                            }}
+                                                            style={{color: '#3b82f6', textDecoration: 'none'}} 
+                                                            title={`View source ${citeNum}`}
+                                                        >
                                                             [{citeNum}]
                                                         </a>
                                                     </sup>
@@ -899,16 +1150,18 @@
                                     </div>
                                 )}
                                 
-                                <div className="expert-actions">
-                                    <a 
-                                        href={`/api/v1/source/${job.request_id}`} 
-                                        target="_blank" 
-                                        rel="noopener noreferrer"
-                                        className="source-link"
-                                    >
-                                        View API Response
-                                    </a>
-                                </div>
+                                {expert.personalised_message && (
+                                    <div className="expert-actions">
+                                        <details>
+                                            <summary className="source-link" style={{ cursor: 'pointer' }}>
+                                                View Personalized Message
+                                            </summary>
+                                            <p style={{ marginTop: '10px', fontSize: '14px', color: '#6b7280' }}>
+                                                {expert.personalised_message}
+                                            </p>
+                                        </details>
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -916,19 +1169,105 @@
             );
         }
         
-        // Render the app
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
-    
-    <script>
-        // Transform and run the Babel script
-        const script = document.querySelector('script[type="text/babel"]');
-        const transformed = Babel.transform(script.innerHTML, { 
-            presets: ['react'],
-            plugins: []
-        }).code;
-        eval(transformed);
+        function CreateJobForm({ onSubmit }) {
+            const [projectDescription, setProjectDescription] = useState('');
+            const [effortLevel, setEffortLevel] = useState('low');
+            const [isSubmitting, setIsSubmitting] = useState(false);
+            
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                if (!projectDescription.trim()) {
+                    alert('Please enter a project description');
+                    return;
+                }
+                
+                setIsSubmitting(true);
+                try {
+                    // Set environment variables based on effort level
+                    const envSettings = {
+                        low: { reasoning: 'low', search: 'low', timeout: 300000 },
+                        medium: { reasoning: 'medium', search: 'medium', timeout: 600000 },
+                        high: { reasoning: 'high', search: 'high', timeout: 900000 }
+                    };
+                    
+                    const settings = envSettings[effortLevel];
+                    
+                    // In production, these would be set as environment variables
+                    // For now, we'll include them in the API call or use defaults
+                    await onSubmit(projectDescription, effortLevel);
+                    
+                    // Reset form
+                    setProjectDescription('');
+                    setEffortLevel('low');
+                } finally {
+                    setIsSubmitting(false);
+                }
+            };
+            
+            return (
+                <div className="create-job-form">
+                    <h2 style={{ marginBottom: '30px' }}>Create New Expert Sourcing Job</h2>
+                    
+                    <form onSubmit={handleSubmit}>
+                        <div className="form-group">
+                            <label className="form-label" htmlFor="project-description">
+                                Project Description
+                            </label>
+                            <textarea
+                                id="project-description"
+                                className="form-textarea"
+                                value={projectDescription}
+                                onChange={(e) => setProjectDescription(e.target.value)}
+                                placeholder="Describe your project in detail. Include the technology stack, business goals, and specific expertise you're looking for..."
+                                required
+                            />
+                        </div>
+                        
+                        <div className="form-group">
+                            <label className="form-label">
+                                Search Effort Level
+                            </label>
+                            <div className="effort-selector">
+                                <div 
+                                    className={`effort-option ${effortLevel === 'low' ? 'selected' : ''}`}
+                                    onClick={() => setEffortLevel('low')}
+                                >
+                                    <h4>Low</h4>
+                                    <p>Quick search (5 min)</p>
+                                    <p style={{ fontSize: '12px' }}>Basic reasoning & search</p>
+                                </div>
+                                <div 
+                                    className={`effort-option ${effortLevel === 'medium' ? 'selected' : ''}`}
+                                    onClick={() => setEffortLevel('medium')}
+                                >
+                                    <h4>Medium</h4>
+                                    <p>Standard search (10 min)</p>
+                                    <p style={{ fontSize: '12px' }}>Enhanced analysis</p>
+                                </div>
+                                <div 
+                                    className={`effort-option ${effortLevel === 'high' ? 'selected' : ''}`}
+                                    onClick={() => setEffortLevel('high')}
+                                >
+                                    <h4>High</h4>
+                                    <p>Deep search (15 min)</p>
+                                    <p style={{ fontSize: '12px' }}>Comprehensive results</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button 
+                            type="submit" 
+                            className="form-submit"
+                            disabled={isSubmitting}
+                        >
+                            {isSubmitting ? 'Creating Job...' : 'Create Expert Sourcing Job'}
+                        </button>
+                    </form>
+                </div>
+            );
+        }
+        
+        ReactDOM.render(<App />, document.getElementById('root'));
     </script>
 </body>
 </html>

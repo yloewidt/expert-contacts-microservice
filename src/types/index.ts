@@ -18,6 +18,7 @@ export interface Expert {
   type_importance_score?: number;
   relevancy_to_type_score?: number;
   responsiveness_score?: number;
+  expert_type?: string;
 }
 
 export interface ExpertType {

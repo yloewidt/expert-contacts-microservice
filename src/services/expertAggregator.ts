@@ -111,6 +111,9 @@ export class ExpertAggregatorService {
       // Use the most recent/complete information
       const latestCandidate = group[group.length - 1].candidate;
       
+      // Get the expert type title from the first matching expert type
+      const expertType = group[0].expertType.expert_title;
+      
       return {
         id: uuidv4(),
         name: latestCandidate.name,
@@ -126,7 +129,8 @@ export class ExpertAggregatorService {
         // Score breakdown
         type_importance_score: Math.round(avgTypeImportance * 100) / 100,
         relevancy_to_type_score: Math.round(avgRelevancy * 100) / 100,
-        responsiveness_score: Math.round(avgResponsiveness * 100) / 100
+        responsiveness_score: Math.round(avgResponsiveness * 100) / 100,
+        expert_type: expertType
       };
     });
 
