@@ -592,4 +592,132 @@ VALIIDATE LINKEDIN LINK viability google searches with site:linkedin.com, check 
       duration
     };
   }
+
+  async deduplicateExperts(candidates: Array<{
+    id: number;
+    name: string;
+    title: string;
+    company: string;
+    linkedin_url: string | null;
+  }>): Promise<Array<{ original_id: number; new_id: number }>> {
+    const startTime = Date.now();
+    let llmCallId: string | undefined;
+    
+    try {
+      logger.info({ candidateCount: candidates.length }, 'Starting expert deduplication with o3');
+      
+      // Track LLM call if requestId is available
+      if (this.requestId) {
+        llmCallId = await this.db.createLLMCall(this.requestId, 'o3', 'deduplicate_experts');
+      }
+
+      const systemPrompt = `You are an expert deduplication system. Your task is to identify which expert records refer to the same person and create a mapping to unify them.
+
+Analyze the provided list of experts and determine which records should be merged. Consider:
+- Same person with slight name variations (e.g., "John Smith" vs "J. Smith" vs "John R. Smith")
+- Same person at different companies (career progression)
+- Same person with different titles at the same company
+- Similar LinkedIn URLs that might be the same person
+
+Create a mapping where each record gets assigned a new_id. Records that refer to the same person should have the same new_id.
+
+IMPORTANT: Be conservative - only merge if you're confident they're the same person.`;
+
+      const response = await (this.client as any).responses.create({
+        model: "o3",
+        input: [{
+          role: "user",
+          content: [{
+            type: "input_text",
+            text: `${systemPrompt}\n\nExperts to deduplicate:\n${JSON.stringify(candidates, null, 2)}`
+          }]
+        }],
+        text: {
+          format: {
+            type: "json_schema",
+            name: "deduplication_mapping",
+            strict: true,
+            schema: {
+              type: "object",
+              properties: {
+                mappings: {
+                  type: "array",
+                  description: "Array of id mappings",
+                  items: {
+                    type: "object",
+                    properties: {
+                      original_id: {
+                        type: "number",
+                        description: "The original id from the input"
+                      },
+                      new_id: {
+                        type: "number",
+                        description: "The new unified id (records with same new_id are the same person)"
+                      }
+                    },
+                    required: ["original_id", "new_id"],
+                    additionalProperties: false
+                  }
+                },
+                reasoning: {
+                  type: "string",
+                  description: "Brief explanation of the deduplication decisions"
+                }
+              },
+              required: ["mappings", "reasoning"],
+              additionalProperties: false
+            }
+          }
+        },
+        reasoning: { effort: process.env.O3_REASONING_EFFORT || "low" },
+        store: true
+      }, {
+        timeout: parseInt(process.env.O3_TIMEOUT_MS || '300000') // Default 5 minutes
+      });
+
+      const jsonContent = response.output_text || 
+                         response.output?.find((o: any) => o.type === 'message')?.content?.[0]?.text;
+      
+      if (!jsonContent) {
+        throw new Error('No content in deduplication response');
+      }
+
+      const result = JSON.parse(jsonContent);
+      
+      logger.info({ 
+        mappingCount: result.mappings.length,
+        reasoning: result.reasoning 
+      }, 'Deduplication completed');
+      
+      // Track success
+      if (llmCallId && this.requestId) {
+        const duration = Date.now() - startTime;
+        const usage = response.usage;
+        await this.db.updateLLMCall(llmCallId, 'success', duration, undefined, 
+          usage ? {
+            prompt_tokens: usage.prompt_tokens || 0,
+            completion_tokens: usage.completion_tokens || 0,
+            total_tokens: usage.total_tokens || 0
+          } : undefined
+        );
+      }
+      
+      return result.mappings;
+    } catch (error) {
+      logger.error({ error }, 'Error deduplicating experts');
+      
+      // Track failure
+      if (llmCallId && this.requestId) {
+        const duration = Date.now() - startTime;
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        await this.db.updateLLMCall(llmCallId, 'failed', duration, errorMessage);
+      }
+      
+      // Return identity mapping on error
+      return candidates.map((c, idx) => ({
+        original_id: c.id,
+        new_id: idx + 1
+      }));
+    }
+  }
 }

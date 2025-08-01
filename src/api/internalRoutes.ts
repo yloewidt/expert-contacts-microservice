@@ -118,8 +118,8 @@ router.post('/internal/aggregate-results', async (req: Request, res: Response): 
     await db.saveRawOutputs(request_id, expert_types, search_prompts, search_results);
     
     // Aggregate experts
-    const aggregator = new ExpertAggregatorService();
-    const experts = aggregator.aggregateExperts(expert_types, search_results.map((r: any) => r.candidates || []));
+    const aggregator = new ExpertAggregatorService(request_id);
+    const experts = await aggregator.aggregateExperts(expert_types, search_results.map((r: any) => r.candidates || []));
     
     // Save experts to database
     await db.saveExperts(request_id, experts);
