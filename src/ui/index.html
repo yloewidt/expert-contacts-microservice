@@ -102,7 +102,7 @@
         }
         
         .job-status.failed {
-            background-color: #fee;
+            background-color: #fee2e2;
             color: #991b1b;
         }
         
@@ -153,7 +153,7 @@
             width: 10px;
             height: 10px;
             border-radius: 50%;
-            animation: pulse 2s infinite;
+            animation: pulse 3s infinite;
         }
         
         .llm-status-dot.healthy {
@@ -666,7 +666,7 @@
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
-    <script type="text/babel">
+    <script type="text/babel" data-presets="env,react">
         const { useState, useEffect } = React;
         
         function App() {
@@ -690,12 +690,6 @@
                     loadJobs();
                 }
             }, [view]);
-            
-            useEffect(() => {
-                if (selectedJob) {
-                    loadJobDetails(selectedJob);
-                }
-            }, [selectedJob]);
             
             const loadJobs = async () => {
                 setLoading(true);
@@ -726,9 +720,11 @@
                 }
             };
             
-            const formatDate = (dateString) => {
-                return new Date(dateString).toLocaleString();
+            const handleSelectJob = (jobId) => {
+                setSelectedJob(jobId);
+                loadJobDetails(jobId);
             };
+            
             
             const createJob = async (projectDescription, effortLevel) => {
                 setLoading(true);
@@ -785,7 +781,7 @@
                     {loading && <div className="loading">Loading...</div>}
                     
                     {!loading && view === 'jobs' && (
-                        <JobList jobs={jobs} onSelectJob={setSelectedJob} />
+                        <JobList jobs={jobs} onSelectJob={handleSelectJob} />
                     )}
                     
                     {!loading && view === 'details' && jobDetails && (
@@ -802,7 +798,23 @@
         function JobList({ jobs, onSelectJob }) {
             return (
                 <div className="job-list">
-                    <h2 style={{ marginBottom: '20px' }}>Sourcing Jobs</h2>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                        <h2>Sourcing Jobs</h2>
+                        <button 
+                            onClick={() => window.location.reload()}
+                            style={{
+                                padding: '8px 16px',
+                                background: '#3b82f6',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '14px'
+                            }}
+                        >
+                            Refresh
+                        </button>
+                    </div>
                     {jobs.map(job => (
                         <div key={job.id} className="job-card" onClick={() => onSelectJob(job.id)}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '10px' }}>
@@ -874,7 +886,7 @@
                                 <strong>Created:</strong> {new Date(job.metadata.created_at).toLocaleString()}
                             </div>
                             <div>
-                                <strong>Processing Time:</strong> {Math.round(job.metadata.processing_time_seconds)}s
+                                <strong>Processing Time:</strong> {Math.round(job.metadata.processing_time_seconds)} s
                             </div>
                             <div>
                                 <strong>Experts Found:</strong> {experts.length}
@@ -1136,17 +1148,7 @@
                 
                 setIsSubmitting(true);
                 try {
-                    // Set environment variables based on effort level
-                    const envSettings = {
-                        low: { reasoning: 'low', search: 'low', timeout: 300000 },
-                        medium: { reasoning: 'medium', search: 'medium', timeout: 600000 },
-                        high: { reasoning: 'high', search: 'high', timeout: 900000 }
-                    };
-                    
-                    const settings = envSettings[effortLevel];
-                    
-                    // In production, these would be set as environment variables
-                    // For now, we'll include them in the API call or use defaults
+                    // Pass effort level to the API
                     await onSubmit(projectDescription, effortLevel);
                     
                     // Reset form
