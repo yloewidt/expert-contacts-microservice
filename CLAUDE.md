@@ -4,26 +4,39 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Environments
 
+See [ENVIRONMENTS.md](./ENVIRONMENTS.md) for detailed environment information.
+
 ### Development Environment
-- **Cloud Run Service**: https://expert-contacts-service-efikrlpu3q-uc.a.run.app
-  - Note: Cloud Run may show different URL formats (e.g., with numeric suffixes) but they all point to the same service
+- **Cloud Run Service**: https://expert-contacts-dev-efikrlpu3q-uc.a.run.app
 - **Database**: expert-contacts-dev (Cloud SQL, IP: 34.121.141.137)
 - **Workflow**: expert-sourcing-dev
 - **Cloud Tasks Queue**: expert-sourcing-dev
+- **Deployment**: `./deploy-dev.sh`
 - **Secrets**: 
   - `expert-contacts-openai-key-dev` - OpenAI API key
   - `expert-contacts-db-password-dev` - Database password
 
+### Staging Environment
+- **Cloud Run Service**: https://expert-contacts-staging-efikrlpu3q-uc.a.run.app
+- **Database**: Currently shares dev database (should be separated)
+- **Workflow**: expert-sourcing-dev (should have staging workflow)
+- **Deployment**: `./deploy-staging.sh`
+
 ### Production Environment  
+- **Cloud Run Service**: https://expert-contacts-prod-efikrlpu3q-uc.a.run.app
 - **Database**: expert-contacts-prod (Cloud SQL, IP: 34.63.118.13)
 - **Workflow**: expert-sourcing-workflow
-- **Note**: Currently the Cloud Run service is configured to use the development database and workflow
+- **Deployment**: `./deploy-prod.sh`
+- **Secrets**:
+  - `expert-contacts-openai-key-prod` - OpenAI API key
+  - `expert-contacts-db-password-prod` - Database password
 
 ### Configuration
-The Cloud Run service uses environment variables and secrets:
-- `CLOUD_SQL_CONNECTION_NAME`: Points to the Cloud SQL instance
-- `OPENAI_API_KEY`: Retrieved from Google Secret Manager
-- `DB_*`: Database connection parameters
+Each environment has its own configuration:
+- `ENVIRONMENT`: Set to 'development', 'staging', or 'production'
+- `CLOUD_SQL_CONNECTION_NAME`: Points to the appropriate Cloud SQL instance
+- `OPENAI_API_KEY`: Retrieved from Google Secret Manager (environment-specific)
+- `DB_*`: Database connection parameters (environment-specific)
 
 ## Product Specification
 
@@ -79,14 +92,13 @@ psql -U postgres -d expert_contacts -f migrations/001_initial_schema.sql
 
 ### Deployment
 ```bash
-# Fast deployment using source-based builds (recommended)
-./deploy.sh
+# Deploy to specific environments
+./deploy-dev.sh      # Deploy to development
+./deploy-staging.sh  # Deploy to staging  
+./deploy-prod.sh     # Deploy to production (requires confirmation)
 
-# Manual deployment with Docker
-docker build -t expert-contacts .
-gcloud run deploy expert-contacts-api \
-  --image REGION-docker.pkg.dev/PROJECT_ID/REPOSITORY/expert-contacts:latest \
-  --region REGION
+# Default deployment (goes to development)
+./deploy.sh
 ```
 
 ## Architecture Overview

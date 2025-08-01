@@ -1,26 +1,13 @@
 #!/bin/bash
-# Fast deployment script for Expert Contacts Service
-# Uses source-based deployment for speed
+# Default deployment script - deploys to DEVELOPMENT
+# For specific environments use: deploy-dev.sh, deploy-staging.sh, deploy-prod.sh
 
-set -e
+echo "⚠️  This script deploys to DEVELOPMENT by default"
+echo "   For other environments use:"
+echo "   - ./deploy-dev.sh      for development"
+echo "   - ./deploy-staging.sh  for staging"
+echo "   - ./deploy-prod.sh     for production"
+echo ""
 
-echo "🚀 Starting fast deployment (source-based)..."
-
-# Build locally first
-echo "📦 Building application..."
-npm run build
-
-# Deploy directly from source (Cloud Build)
-echo "☁️  Deploying to Cloud Run (this builds in the cloud)..."
-/Users/yonatanloewidt/google-cloud-sdk/bin/gcloud run deploy expert-contacts-service \
-  --source . \
-  --region us-central1 \
-  --allow-unauthenticated \
-  --add-cloudsql-instances ideasgenerator:us-central1:expert-contacts-dev \
-  --set-env-vars USE_PUBLIC_IP=true,CLOUD_SQL_CONNECTION_NAME=ideasgenerator:us-central1:expert-contacts-dev,DB_HOST=34.121.141.137,DB_NAME=expert_contacts,DB_USER=app_user,DB_PORT=5432,GCP_PROJECT_ID=ideasgenerator,GCP_REGION=us-central1,WORKFLOW_NAME=expert-sourcing-dev,SEARCH_MODEL=o3 \
-  --update-secrets DB_PASSWORD=expert-contacts-db-password-dev:latest \
-  --update-secrets OPENAI_API_KEY=expert-contacts-openai-key-dev:latest \
-  --timeout=10m
-
-echo "✅ Deployment complete!"
-echo "🌐 Service URL: https://expert-contacts-service-1045570267679.us-central1.run.app/"
+# Run development deployment
+./deploy-dev.sh
