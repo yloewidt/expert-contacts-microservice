@@ -700,23 +700,12 @@
             const loadJobs = async () => {
                 setLoading(true);
                 try {
-                    // Demo data
-                    const demoJobs = [
-                        {
-                            id: '272d8a5d-3633-40df-8274-503cdadd96b4',
-                            project_description: 'Building an AI-powered healthcare platform for remote patient monitoring and predictive diagnostics using machine learning',
-                            status: 'completed',
-                            created_at: '2025-07-29T10:15:32.000Z',
-                            completed_at: '2025-07-29T10:23:45.000Z'
-                        },
-                        {
-                            id: '912db61a-1cc0-4000-907d-d66336cc118b',
-                            project_description: 'I am building a decentralized finance (DeFi) protocol that enables cross-chain liquidity pools with automated market making',
-                            status: 'processing',
-                            created_at: '2025-07-29T19:54:58.243Z'
-                        }
-                    ];
-                    setJobs(demoJobs);
+                    const response = await fetch('/api/v1/jobs');
+                    if (!response.ok) {
+                        throw new Error('Failed to load jobs');
+                    }
+                    const data = await response.json();
+                    setJobs(data.requests || []);
                 } finally {
                     setLoading(false);
                 }
@@ -725,113 +714,13 @@
             const loadJobDetails = async (jobId) => {
                 setLoading(true);
                 try {
-                    if (jobId === '272d8a5d-3633-40df-8274-503cdadd96b4') {
-                        // Demo data for healthcare AI job
-                        const demoJob = {
-                            request_id: jobId,
-                            project_description: 'Building an AI-powered healthcare platform for remote patient monitoring and predictive diagnostics using machine learning',
-                            status: 'completed',
-                            experts: [
-                                {
-                                    id: 'exp-1',
-                                    name: 'Dr. Sarah Chen',
-                                    title: 'Chief Medical AI Officer',
-                                    company: 'HealthTech Innovations',
-                                    linkedin_url: 'https://linkedin.com/in/drsarahchen',
-                                    email: 'sarah.chen@healthtech.com',
-                                    relevance_score: 0.95,
-                                    matching_reasons: ['Led development of FDA-approved AI diagnostic toolsciteturn1search0', 'Published 15+ papers on ML in healthcareciteturn2search1', 'Expert in remote patient monitoring systemsciteturn1search2'],
-                                    personalised_message: 'Dr. Chen would be invaluable for your AI healthcare platform...',
-                                    areas_of_expertise: ['Medical AI', 'FDA Compliance', 'Remote Monitoring', 'Clinical ML Models', 'Healthcare Data Privacy'],
-                                    conversation_topics: ['FDA approval strategies', 'Clinical validation approaches', 'HIPAA compliance in ML', 'Edge computing for patient devices'],
-                                    type_importance_score: 0.95,
-                                    relevancy_to_type_score: 0.92,
-                                    responsiveness_score: 0.88,
-                                    expert_type: 'Healthcare AI Specialist'
-                                },
-                                {
-                                    id: 'exp-2',
-                                    name: 'Michael Rodriguez',
-                                    title: 'VP of Engineering, Healthcare Platform',
-                                    company: 'TeleHealth Solutions',
-                                    linkedin_url: 'https://linkedin.com/in/mrodriguez-health',
-                                    email: null,
-                                    relevance_score: 0.89,
-                                    matching_reasons: ['Built scalable telehealth platform serving 5M+ patientsciteturn3search1', 'Expertise in real-time health data streamingciteturn4search2', 'Background in predictive analytics for patient outcomesciteturn3search3'],
-                                    personalised_message: 'Michael\'s experience scaling healthcare platforms would be perfect...',
-                                    areas_of_expertise: ['Healthcare Infrastructure', 'Real-time Data Processing', 'HIPAA Compliance', 'Microservices Architecture'],
-                                    conversation_topics: ['Scaling challenges in healthcare', 'Real-time monitoring architecture', 'Data pipeline design', 'Security best practices'],
-                                    type_importance_score: 0.85,
-                                    relevancy_to_type_score: 0.90,
-                                    responsiveness_score: 0.75,
-                                    expert_type: 'Healthcare Platform Architect'
-                                }
-                            ],
-                            metadata: {
-                                created_at: '2025-07-29T10:15:32.000Z',
-                                processing_time_seconds: 497.921
-                            },
-                            llm_metrics: {
-                                total_calls: 12,
-                                successful_calls: 11,
-                                failed_calls: 1,
-                                timeout_calls: 0,
-                                total_duration_ms: 145234,
-                                avg_duration_ms: 12103,
-                                total_retries: 1,
-                                by_operation: {
-                                    generate_expert_types: {
-                                        calls: 1,
-                                        success_rate: 100,
-                                        avg_duration_ms: 2341,
-                                        retries: 0
-                                    },
-                                    generate_search_prompt: {
-                                        calls: 5,
-                                        success_rate: 100,
-                                        avg_duration_ms: 3456,
-                                        retries: 0
-                                    },
-                                    search_experts: {
-                                        calls: 5,
-                                        success_rate: 80,
-                                        avg_duration_ms: 25432,
-                                        retries: 1
-                                    },
-                                    deduplicate_experts: {
-                                        calls: 1,
-                                        success_rate: 100,
-                                        avg_duration_ms: 5234,
-                                        retries: 0
-                                    }
-                                }
-                            },
-                            raw_outputs: {
-                                expert_types: [
-                                    { expert_title: 'Healthcare AI Specialist', importance_score: 0.95 },
-                                    { expert_title: 'Healthcare Platform Architect', importance_score: 0.85 }
-                                ]
-                            }
-                        };
-                        
-                        setJobDetails(demoJob);
-                        setView('details');
-                    } else if (jobId === '912db61a-1cc0-4000-907d-d66336cc118b') {
-                        // Demo data for DeFi job (in progress)
-                        const demoJob = {
-                            request_id: jobId,
-                            project_description: 'I am building a decentralized finance (DeFi) protocol that enables cross-chain liquidity pools with automated market making',
-                            status: 'processing',
-                            experts: [],
-                            metadata: {
-                                created_at: '2025-07-29T19:54:58.243Z',
-                                processing_time_seconds: 120 // Still processing
-                            }
-                        };
-                        
-                        setJobDetails(demoJob);
-                        setView('details');
+                    const response = await fetch(`/api/v1/source/${jobId}`);
+                    if (!response.ok) {
+                        throw new Error('Failed to load job details');
                     }
+                    const jobData = await response.json();
+                    setJobDetails(jobData);
+                    setView('details');
                 } finally {
                     setLoading(false);
                 }
