@@ -119,10 +119,13 @@ router.post('/internal/aggregate-results', async (req: Request, res: Response): 
     
     // Aggregate experts
     const aggregator = new ExpertAggregatorService(request_id);
-    const experts = await aggregator.aggregateExperts(expert_types, search_results.map((r: any) => r.candidates || []));
+    const { experts, expertTypeMatches } = await aggregator.aggregateExperts(expert_types, search_results.map((r: any) => r.candidates || []));
     
     // Save experts to database
     await db.saveExperts(request_id, experts);
+    
+    // Save per-type matches to database
+    await db.saveExpertTypeMatches(request_id, expertTypeMatches);
     
     return res.json({ 
       status: 'success',

@@ -46,6 +46,7 @@ export interface SourcingResponse {
   status: 'pending' | 'processing' | 'completed' | 'failed';
   project_description?: string;
   experts?: Expert[];
+  expert_type_matches?: any[];
   metadata?: {
     created_at: string;
     processing_time_seconds: number;

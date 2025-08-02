@@ -220,11 +220,18 @@ EX-CEO OR A freelance consultant in this spaceshould score high here(0.9-1.0).
 - Find a public email where possible.
 - Cite every claim with a hyperlink inside the matching_reasons.
 
-IMPORTANT:
-VALIIDATE LINKEDIN LINK viability google searches with site:linkedin.com, check results and URL and conclude on the most likely linkedin url. if you cannot find one. return empty.
-When you find a target person look them up on using the following format:
+FINDING THE RIGHT LINKEDIN URL:
+Finding the right person is the most important part of the task.
+Algo:
+1. Web Search with the following format:
 [Person Name] [Additional information they might include in their profile] site:linkedin.com
-Then if you identify the person profile in the results, use the URL from the results AS IS.
+1.a. If you cannot find the right person, make a variation of the search query and try again.
+2. Grab Linkedin FULL PROFILE URL from the Search Results.
+3. For each FULL PROFILE URL Validate the URL from the results by doing the following search:
+site:[FULL PROFILE URL] and validate the results exists. If results doesn't exist you can ommit the URL.
+4. If you still get multiple FULL PROFILE URLs for a person do the following:
+[Additional information they might include in their profile] site:[FULL PROFILE URL]
+If you get a response it means that the URL contains the information.
 
 ### EXAMPLE OUTPUT (structure only)
 [

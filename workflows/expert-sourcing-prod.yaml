@@ -1,0 +1,120 @@
+main:
+  params: [args]
+  steps:
+    - init:
+        assign:
+          - requestId: ${args.request_id}
+          - projectDescription: ${args.project_description}
+          - serviceUrl: "https://expert-contacts-prod-efikrlpu3q-uc.a.run.app"
+          
+    - updateStatusProcessing:
+        call: http.post
+        args:
+          url: ${serviceUrl + "/internal/update-status"}
+          body:
+            request_id: ${requestId}
+            status: "processing"
+          auth:
+            type: OIDC
+            
+    - generateExpertTypes:
+        call: http.post
+        args:
+          url: ${serviceUrl + "/internal/generate-expert-types"}
+          body:
+            project_description: ${projectDescription}
+            request_id: ${requestId}
+          auth:
+            type: OIDC
+          timeout: 60
+        result: expertTypesResponse
+        
+    - prepareSearchPrompts:
+        assign:
+          - searchPrompts: []
+          - expertTypes: ${expertTypesResponse.body.expert_types}
+          
+    - generatePrompts:
+        for:
+          value: expertType
+          in: ${expertTypes}
+          steps:
+            - callPromptGeneration:
+                call: http.post
+                args:
+                  url: ${serviceUrl + "/internal/generate-search-prompt"}
+                  body:
+                    project_description: ${projectDescription}
+                    expert_type: ${expertType}
+                    request_id: ${requestId}
+                  auth:
+                    type: OIDC
+                  timeout: 60
+                result: promptResult
+            - appendPrompt:
+                assign:
+                  - searchPrompts: ${list.concat(searchPrompts, promptResult.body.search_prompt)}
+                  
+    - prepareSearchResults:
+        assign:
+          - searchResults: []
+          
+    - executeSearches:
+        parallel:
+          shared: [searchResults]
+          concurrency_limit: 5
+          for:
+            value: searchPrompt
+            index: i
+            in: ${searchPrompts}
+            steps:
+              - callSearch:
+                  try:
+                    call: http.post
+                    args:
+                      url: ${serviceUrl + "/internal/search-experts"}
+                      body:
+                        search_prompt: ${searchPrompt}
+                        request_id: ${requestId}
+                      auth:
+                        type: OIDC
+                      timeout: 300
+                    result: searchResult
+                  except:
+                    as: e
+                    steps:
+                      - handleSearchError:
+                          assign:
+                            - searchResult:
+                                body:
+                                  candidates: []
+                                  error: ${e.message}
+              - appendSearchResult:
+                  assign:
+                    - searchResults: ${list.concat(searchResults, searchResult.body)}
+                  
+    - aggregateResults:
+        call: http.post
+        args:
+          url: ${serviceUrl + "/internal/aggregate-results"}
+          body:
+            request_id: ${requestId}
+            expert_types: ${expertTypes}
+            search_prompts: ${searchPrompts}
+            search_results: ${searchResults}
+          auth:
+            type: OIDC
+        result: aggregationResult
+        
+    - updateStatusCompleted:
+        call: http.post
+        args:
+          url: ${serviceUrl + "/internal/update-status"}
+          body:
+            request_id: ${requestId}
+            status: "completed"
+          auth:
+            type: OIDC
+            
+    - return:
+        return: ${aggregationResult.body}

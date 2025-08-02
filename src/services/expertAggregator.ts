@@ -13,7 +13,7 @@ export class ExpertAggregatorService {
   async aggregateExperts(
     expertTypes: ExpertType[],
     searchResults: SearchCandidate[][]
-  ): Promise<Expert[]> {
+  ): Promise<{ experts: Expert[], expertTypeMatches: any[] }> {
     // Flatten all candidates and assign temporary IDs
     const allCandidates: Array<{
       tempId: number;
@@ -33,7 +33,7 @@ export class ExpertAggregatorService {
     });
 
     if (allCandidates.length === 0) {
-      return [];
+      return { experts: [], expertTypeMatches: [] };
     }
 
     // Prepare candidates for deduplication (only core identifying info)
@@ -71,6 +71,9 @@ export class ExpertAggregatorService {
       groupedCandidates.get(newId)!.push({ candidate, expertType });
     });
 
+    // Collect per-type matches for database storage
+    const expertTypeMatches: any[] = [];
+    
     // Create unified expert records
     const experts: Expert[] = Array.from(groupedCandidates.entries()).map(([, group]) => {
       // For unified records, we need to merge the information intelligently
@@ -85,6 +88,9 @@ export class ExpertAggregatorService {
       // Collect scores for averaging
       const typeScores: { score: number; responsiveness: number; importance: number }[] = [];
       
+      // Generate expert ID upfront
+      const expertId = uuidv4();
+      
       group.forEach(({ candidate, expertType }) => {
         candidate.matching_reasons.forEach(reason => allMatchingReasons.add(reason));
         candidate.areas_of_expertise?.forEach(area => allAreasOfExpertise.add(area));
@@ -94,6 +100,16 @@ export class ExpertAggregatorService {
           score: candidate.relevancy_to_type_score,
           responsiveness: candidate.responsiveness,
           importance: expertType.importance_score
+        });
+        
+        // Store per-type match data
+        expertTypeMatches.push({
+          expert_id: expertId,
+          expert_type: expertType.expert_title,
+          type_importance_score: expertType.importance_score,
+          relevancy_to_type_score: candidate.relevancy_to_type_score,
+          responsiveness_score: candidate.responsiveness,
+          matching_reasons: candidate.matching_reasons
         });
       });
       
@@ -115,7 +131,7 @@ export class ExpertAggregatorService {
       const expertType = group[0].expertType.expert_title;
       
       return {
-        id: uuidv4(),
+        id: expertId,
         name: latestCandidate.name,
         title: latestCandidate.title,
         company: latestCandidate.company,
@@ -143,6 +159,6 @@ export class ExpertAggregatorService {
       deduplicationRatio: ((allCandidates.length - experts.length) / allCandidates.length * 100).toFixed(1) + '%'
     }, 'Aggregated expert results with LLM deduplication');
 
-    return experts;
+    return { experts, expertTypeMatches };
   }
 }

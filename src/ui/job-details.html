@@ -534,6 +534,32 @@
         .expert-name-link:hover {
             color: var(--primary);
         }
+        
+        /* Expert Type Labels */
+        .expert-type-label {
+            background: var(--primary);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        
+        .expert-types-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-bottom: 12px;
+        }
+        
+        .expert-type-label.small {
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+            font-size: 0.7rem;
+            padding: 2px 8px;
+        }
 
 
         /* Responsive */
@@ -609,7 +635,9 @@
         // Current filter
         let selectedExpertType = null;
         let currentExperts = [];
+        let currentExpertTypeMatches = [];
         let currentMessage = '';
+        let currentExpertTypes = [];
 
         // Format date
         function formatDate(dateString) {
@@ -676,12 +704,89 @@
             selectedExpertType = type;
             renderExperts();
         }
+        
+        // Calculate scores for a specific expert type
+        function calculateExpertScores(expertId, expertType) {
+            const matches = currentExpertTypeMatches.filter(m => 
+                m.expert_id === expertId && 
+                (!expertType || m.expert_type === expertType)
+            );
+            
+            if (matches.length === 0) {
+                return null;
+            }
+            
+            if (expertType) {
+                // Single type - return exact scores
+                const match = matches[0];
+                return {
+                    relevance_score: match.relevancy_to_type_score * match.type_importance_score * match.responsiveness_score,
+                    type_importance_score: match.type_importance_score,
+                    relevancy_to_type_score: match.relevancy_to_type_score,
+                    responsiveness_score: match.responsiveness_score,
+                    matching_reasons: match.matching_reasons,
+                    expert_types: [match.expert_type]
+                };
+            } else {
+                // Multiple types - calculate weighted average
+                const totalScore = matches.reduce(
+                    (sum, m) => sum + (m.relevancy_to_type_score * m.type_importance_score * m.responsiveness_score),
+                    0
+                );
+                const avgTypeImportance = matches.reduce((sum, m) => sum + m.type_importance_score, 0) / matches.length;
+                const avgRelevancy = matches.reduce((sum, m) => sum + m.relevancy_to_type_score, 0) / matches.length;
+                const avgResponsiveness = matches.reduce((sum, m) => sum + m.responsiveness_score, 0) / matches.length;
+                
+                // Collect all unique matching reasons
+                const allReasons = new Set();
+                matches.forEach(m => m.matching_reasons?.forEach(r => allReasons.add(r)));
+                
+                return {
+                    relevance_score: totalScore,
+                    type_importance_score: avgTypeImportance,
+                    relevancy_to_type_score: avgRelevancy,
+                    responsiveness_score: avgResponsiveness,
+                    matching_reasons: Array.from(allReasons),
+                    expert_types: matches.map(m => m.expert_type)
+                };
+            }
+        }
 
         // Render experts
         function renderExperts() {
-            const expertsToShow = selectedExpertType
-                ? currentExperts.filter(e => e.expert_type === selectedExpertType)
-                : currentExperts;
+            // Get unique expert IDs from type matches
+            const expertIds = [...new Set(currentExpertTypeMatches.map(m => m.expert_id))];
+            
+            // Build expert objects with calculated scores
+            const expertsWithScores = expertIds.map(expertId => {
+                const baseExpert = currentExperts.find(e => e.id === expertId);
+                const typeMatches = currentExpertTypeMatches.filter(m => m.expert_id === expertId);
+                
+                if (!baseExpert) return null;
+                
+                // If filtering by type, only include experts that have that type
+                if (selectedExpertType && !typeMatches.some(m => m.expert_type === selectedExpertType)) {
+                    return null;
+                }
+                
+                const scores = calculateExpertScores(expertId, selectedExpertType);
+                if (!scores) return null;
+                
+                return {
+                    ...baseExpert,
+                    relevance_score: scores.relevance_score,
+                    type_importance_score: scores.type_importance_score,
+                    relevancy_to_type_score: scores.relevancy_to_type_score,
+                    responsiveness_score: scores.responsiveness_score,
+                    matching_reasons: selectedExpertType ? scores.matching_reasons : baseExpert.matching_reasons,
+                    expert_types: scores.expert_types
+                };
+            }).filter(e => e !== null);
+            
+            // Sort by relevance score
+            expertsWithScores.sort((a, b) => b.relevance_score - a.relevance_score);
+            
+            const expertsToShow = expertsWithScores;
 
             const expertsHtml = expertsToShow.map((expert, idx) => {
                 // Get message snippet (first 150 chars)
@@ -737,6 +842,15 @@
                     <div class="expert-right">
                         <div class="score-card">
                             <div class="score-card-title">Score Breakdown</div>
+                            ${selectedExpertType && expert.expert_types?.length > 0 ? `
+                                <div class="expert-type-label">${selectedExpertType}</div>
+                            ` : expert.expert_types?.length > 1 ? `
+                                <div class="expert-types-list">
+                                    ${expert.expert_types.map(type => `
+                                        <div class="expert-type-label small">${type}</div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
                             ${expert.type_importance_score !== undefined && expert.type_importance_score !== null ? `
                                 <div class="score-item">
                                     <span class="score-label">Importance:</span>
@@ -776,30 +890,19 @@
                 
                 const job = await response.json();
                 currentExperts = job.experts || [];
+                currentExpertTypeMatches = job.expert_type_matches || [];
 
                 // Extract unique expert types
                 const expertTypes = [];
                 if (job.raw_outputs?.expert_types) {
                     expertTypes.push(...job.raw_outputs.expert_types);
                 }
+                currentExpertTypes = expertTypes;
 
                 // Debug: Log the data structure
                 console.log('Expert Types:', expertTypes);
+                console.log('Expert Type Matches:', currentExpertTypeMatches);
                 console.log('Raw outputs:', job.raw_outputs);
-                
-                // Assign expert types to experts
-                // Since expert_type is not stored in DB, we need a simple heuristic
-                if (expertTypes.length > 0 && currentExperts.length > 0) {
-                    // Simple distribution: assign expert types evenly
-                    const expertsPerType = Math.ceil(currentExperts.length / expertTypes.length);
-                    
-                    currentExperts.forEach((expert, index) => {
-                        const typeIndex = Math.floor(index / expertsPerType);
-                        expert.expert_type = expertTypes[Math.min(typeIndex, expertTypes.length - 1)].expert_title;
-                    });
-                    
-                    console.log('Expert type assignment complete');
-                }
 
                 // Truncate title to 80 chars
                 const truncatedTitle = job.project_description.length > 80 
@@ -890,10 +993,10 @@
                             <div class="filter-pills">
                                 <button class="filter-pill ${!selectedExpertType ? 'active' : ''}" 
                                         onclick="filterExperts(null)">
-                                    All (${currentExperts.length})
+                                    All (${[...new Set(currentExpertTypeMatches.map(m => m.expert_id))].length})
                                 </button>
                                 ${expertTypes.map(type => {
-                                    const count = currentExperts.filter(e => e.expert_type === type.expert_title).length;
+                                    const count = currentExpertTypeMatches.filter(m => m.expert_type === type.expert_title).length;
                                     return `
                                         <button class="filter-pill ${selectedExpertType === type.expert_title ? 'active' : ''}"
                                                 onclick="filterExperts('${type.expert_title}')">

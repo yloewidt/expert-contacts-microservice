@@ -123,6 +123,27 @@ export class Database {
     }
   }
 
+  async getExpertTypeMatches(requestId: string): Promise<any[]> {
+    const query = `
+      SELECT 
+        etm.*,
+        e.name,
+        e.title,
+        e.company,
+        e.linkedin_url
+      FROM expert_type_matches etm
+      JOIN experts e ON etm.expert_id = e.id
+      WHERE etm.request_id = $1
+      ORDER BY etm.expert_type, etm.relevancy_to_type_score DESC
+    `;
+    
+    const result = await pool.query(query, [requestId]);
+    return result.rows.map(row => ({
+      ...row,
+      matching_reasons: typeof row.matching_reasons === 'string' ? JSON.parse(row.matching_reasons) : row.matching_reasons
+    }));
+  }
+
   async getExpertsByRequestId(requestId: string): Promise<Expert[]> {
     const query = `
       SELECT 
@@ -255,12 +276,43 @@ export class Database {
     return result.rows[0].id;
   }
 
+  async saveExpertTypeMatches(requestId: string, expertTypeMatches: any[]): Promise<void> {
+    if (expertTypeMatches.length === 0) return;
+    
+    const values: any[] = [];
+    const placeholders: string[] = [];
+    let paramIndex = 1;
+    
+    expertTypeMatches.forEach(match => {
+      const id = uuidv4();
+      placeholders.push(`($${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, CURRENT_TIMESTAMP)`);
+      values.push(
+        id,
+        requestId,
+        match.expert_id,
+        match.expert_type,
+        match.type_importance_score,
+        match.relevancy_to_type_score,
+        match.responsiveness_score,
+        JSON.stringify(match.matching_reasons || [])
+      );
+    });
+    
+    const query = `
+      INSERT INTO expert_type_matches 
+      (id, request_id, expert_id, expert_type, type_importance_score, relevancy_to_type_score, responsiveness_score, matching_reasons, created_at)
+      VALUES ${placeholders.join(', ')}
+    `;
+    
+    await pool.query(query, values);
+  }
+
   async createExpertMatch(requestId: string, expertId: string, matchData: any): Promise<void> {
     const id = uuidv4();
     const query = `
       INSERT INTO expert_request_matches 
-      (id, request_id, expert_id, relevance_score, email, matching_reasons, personalised_message, areas_of_expertise, conversation_topics, created_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP)
+      (id, request_id, expert_id, relevance_score, email, matching_reasons, personalised_message, areas_of_expertise, conversation_topics, type_importance_score, relevancy_to_type_score, responsiveness_score, expert_type, created_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, CURRENT_TIMESTAMP)
     `;
     
     await pool.query(query, [
@@ -272,7 +324,11 @@ export class Database {
       JSON.stringify(matchData.matching_reasons || []),
       matchData.suggested_message || matchData.personalised_message || '',
       JSON.stringify(matchData.areas_of_expertise || []),
-      JSON.stringify(matchData.conversation_topics || [])
+      JSON.stringify(matchData.conversation_topics || []),
+      matchData.type_importance_score || null,
+      matchData.relevancy_to_type_score || null,
+      matchData.responsiveness_score || null,
+      matchData.expert_type || null
     ]);
   }
 

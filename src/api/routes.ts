@@ -86,12 +86,14 @@ router.get('/api/v1/source/:id', async (req: Request, res: Response): Promise<Re
       const experts = await db.getExpertsByRequestId(id);
       const rawOutputs = await db.getRawOutputs(id);
       const llmMetrics = await db.getLLMMetrics(id);
+      const expertTypeMatches = await db.getExpertTypeMatches(id);
       
       const processingTime = request.completed_at 
         ? (new Date(request.completed_at).getTime() - new Date(request.created_at).getTime()) / 1000
         : 0;
 
       response.experts = experts;
+      response.expert_type_matches = expertTypeMatches;
       response.metadata = {
         created_at: request.created_at,
         processing_time_seconds: processingTime
