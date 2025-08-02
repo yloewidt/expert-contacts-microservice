@@ -23,6 +23,7 @@ export class OpenAIService {
   private client: OpenAI;
   private db: Database;
   private requestId?: string;
+  // Force rebuild: 2025-08-02T11:45:00Z
 
   constructor(requestId?: string) {
     this.db = new Database();
