@@ -56,6 +56,11 @@ export interface SourcingResponse {
     search_prompts: string[];
     search_results: SearchCandidate[][];
   };
+  search_pipeline?: Array<{
+    expert_type: ExpertType;
+    search_prompt: string;
+    candidates: SearchCandidate[];
+  }>;
   message?: string;
   llm_metrics?: LLMMetrics;
 }

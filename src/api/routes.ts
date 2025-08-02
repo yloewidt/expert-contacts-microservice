@@ -100,7 +100,24 @@ router.get('/api/v1/source/:id', async (req: Request, res: Response): Promise<Re
       };
       
       if (rawOutputs) {
+        // Restructure raw outputs to show expert type -> search prompt -> candidates hierarchy
+        const structuredSearchData = [];
+        if (rawOutputs.expert_types && rawOutputs.search_prompts && rawOutputs.search_results) {
+          for (let i = 0; i < rawOutputs.expert_types.length; i++) {
+            const expertType = rawOutputs.expert_types[i];
+            const searchPrompt = rawOutputs.search_prompts[i];
+            const searchResults = rawOutputs.search_results[i];
+            
+            structuredSearchData.push({
+              expert_type: expertType,
+              search_prompt: searchPrompt,
+              candidates: searchResults?.candidates || []
+            });
+          }
+        }
+        
         response.raw_outputs = rawOutputs;
+        response.search_pipeline = structuredSearchData;
       }
       
       if (llmMetrics) {

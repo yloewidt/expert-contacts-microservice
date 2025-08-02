@@ -638,6 +638,8 @@
         let currentExpertTypeMatches = [];
         let currentMessage = '';
         let currentExpertTypes = [];
+        let searchPipeline = [];
+        let allCandidates = [];
 
         // Format date
         function formatDate(dateString) {
@@ -705,6 +707,56 @@
             renderExperts();
         }
         
+        // Deduplicate candidates based on LinkedIn URL and name
+        function deduplicateCandidates(pipeline) {
+            const candidateMap = new Map();
+            let candidateId = 1;
+            
+            pipeline.forEach(stage => {
+                stage.candidates.forEach(candidate => {
+                    // Create a unique key based on LinkedIn URL or name
+                    const key = candidate.linkedin_url || candidate.name.toLowerCase();
+                    
+                    if (!candidateMap.has(key)) {
+                        candidateMap.set(key, {
+                            ...candidate,
+                            unified_id: candidateId++,
+                            expert_types: [stage.expert_type],
+                            raw_scores: [{
+                                expert_type: stage.expert_type.expert_title,
+                                importance_score: stage.expert_type.importance_score,
+                                relevancy_score: candidate.relevancy_to_type_score,
+                                responsiveness_score: candidate.responsiveness
+                            }]
+                        });
+                    } else {
+                        // Merge data from duplicate
+                        const existing = candidateMap.get(key);
+                        existing.expert_types.push(stage.expert_type);
+                        existing.raw_scores.push({
+                            expert_type: stage.expert_type.expert_title,
+                            importance_score: stage.expert_type.importance_score,
+                            relevancy_score: candidate.relevancy_to_type_score,
+                            responsiveness_score: candidate.responsiveness
+                        });
+                        
+                        // Merge matching reasons
+                        const allReasons = new Set([...existing.matching_reasons, ...candidate.matching_reasons]);
+                        existing.matching_reasons = Array.from(allReasons);
+                        
+                        // Merge areas of expertise
+                        const allAreas = new Set([...(existing.areas_of_expertise || []), ...(candidate.areas_of_expertise || [])]);
+                        existing.areas_of_expertise = Array.from(allAreas);
+                        
+                        // Use the latest personalized message
+                        existing.personalised_message = candidate.personalised_message || existing.personalised_message;
+                    }
+                });
+            });
+            
+            return Array.from(candidateMap.values());
+        }
+        
         // Calculate scores for a specific expert type
         function calculateExpertScores(expertId, expertType) {
             const matches = currentExpertTypeMatches.filter(m => 
@@ -754,34 +806,53 @@
 
         // Render experts
         function renderExperts() {
-            // Get unique expert IDs from type matches
-            const expertIds = [...new Set(currentExpertTypeMatches.map(m => m.expert_id))];
+            // Filter candidates based on selected expert type
+            let candidatesToShow = allCandidates;
             
-            // Build expert objects with calculated scores
-            const expertsWithScores = expertIds.map(expertId => {
-                const baseExpert = currentExperts.find(e => e.id === expertId);
-                const typeMatches = currentExpertTypeMatches.filter(m => m.expert_id === expertId);
+            if (selectedExpertType) {
+                candidatesToShow = allCandidates.filter(candidate => 
+                    candidate.raw_scores.some(score => score.expert_type === selectedExpertType)
+                );
+            }
+            
+            // Calculate aggregated scores for each candidate
+            const expertsWithScores = candidatesToShow.map(candidate => {
+                let finalScore, typeImportance, relevancy, responsiveness;
+                let matchingReasons = candidate.matching_reasons;
+                let expertTypes = candidate.expert_types.map(et => et.expert_title);
                 
-                if (!baseExpert) return null;
-                
-                // If filtering by type, only include experts that have that type
-                if (selectedExpertType && !typeMatches.some(m => m.expert_type === selectedExpertType)) {
-                    return null;
+                if (selectedExpertType) {
+                    // Single type - use exact scores
+                    const typeScore = candidate.raw_scores.find(s => s.expert_type === selectedExpertType);
+                    if (typeScore) {
+                        finalScore = typeScore.relevancy_score * typeScore.importance_score * typeScore.responsiveness_score;
+                        typeImportance = typeScore.importance_score;
+                        relevancy = typeScore.relevancy_score;
+                        responsiveness = typeScore.responsiveness_score;
+                        expertTypes = [selectedExpertType];
+                    }
+                } else {
+                    // Multiple types - calculate weighted average
+                    const totalScore = candidate.raw_scores.reduce(
+                        (sum, score) => sum + (score.relevancy_score * score.importance_score * score.responsiveness_score),
+                        0
+                    );
+                    typeImportance = candidate.raw_scores.reduce((sum, s) => sum + s.importance_score, 0) / candidate.raw_scores.length;
+                    relevancy = candidate.raw_scores.reduce((sum, s) => sum + s.relevancy_score, 0) / candidate.raw_scores.length;
+                    responsiveness = candidate.raw_scores.reduce((sum, s) => sum + s.responsiveness_score, 0) / candidate.raw_scores.length;
+                    finalScore = totalScore;
                 }
                 
-                const scores = calculateExpertScores(expertId, selectedExpertType);
-                if (!scores) return null;
-                
                 return {
-                    ...baseExpert,
-                    relevance_score: scores.relevance_score,
-                    type_importance_score: scores.type_importance_score,
-                    relevancy_to_type_score: scores.relevancy_to_type_score,
-                    responsiveness_score: scores.responsiveness_score,
-                    matching_reasons: selectedExpertType ? scores.matching_reasons : baseExpert.matching_reasons,
-                    expert_types: scores.expert_types
+                    ...candidate,
+                    relevance_score: finalScore,
+                    type_importance_score: typeImportance,
+                    relevancy_to_type_score: relevancy,
+                    responsiveness_score: responsiveness,
+                    matching_reasons: matchingReasons,
+                    expert_types: expertTypes
                 };
-            }).filter(e => e !== null);
+            });
             
             // Sort by relevance score
             expertsWithScores.sort((a, b) => b.relevance_score - a.relevance_score);
@@ -892,17 +963,25 @@
                 currentExperts = job.experts || [];
                 currentExpertTypeMatches = job.expert_type_matches || [];
 
-                // Extract unique expert types
-                const expertTypes = [];
-                if (job.raw_outputs?.expert_types) {
-                    expertTypes.push(...job.raw_outputs.expert_types);
+                // Use search_pipeline if available, otherwise fall back to raw_outputs
+                if (job.search_pipeline && job.search_pipeline.length > 0) {
+                    searchPipeline = job.search_pipeline;
+                    currentExpertTypes = searchPipeline.map(stage => stage.expert_type);
+                    
+                    // Deduplicate candidates client-side
+                    allCandidates = deduplicateCandidates(searchPipeline);
+                    
+                    console.log('Search Pipeline:', searchPipeline);
+                    console.log('Deduplicated Candidates:', allCandidates);
+                } else if (job.raw_outputs?.expert_types) {
+                    // Fallback for old data structure
+                    currentExpertTypes = job.raw_outputs.expert_types;
+                    allCandidates = currentExperts; // Use pre-aggregated experts
                 }
-                currentExpertTypes = expertTypes;
 
                 // Debug: Log the data structure
-                console.log('Expert Types:', expertTypes);
-                console.log('Expert Type Matches:', currentExpertTypeMatches);
-                console.log('Raw outputs:', job.raw_outputs);
+                console.log('Expert Types:', currentExpertTypes);
+                console.log('All Candidates:', allCandidates);
 
                 // Truncate title to 80 chars
                 const truncatedTitle = job.project_description.length > 80 
@@ -982,21 +1061,24 @@
                             </div>
                             <div class="metadata-item">
                                 <span class="metadata-label">Expert Types</span>
-                                <span class="metadata-value">${expertTypes.length}</span>
+                                <span class="metadata-value">${currentExpertTypes.length}</span>
                             </div>
                         </div>
                     </div>
 
-                    ${expertTypes.length > 0 ? `
+                    ${currentExpertTypes.length > 0 ? `
                         <div class="filter-section">
                             <h2 class="filter-title">Filter by Expert Type</h2>
                             <div class="filter-pills">
                                 <button class="filter-pill ${!selectedExpertType ? 'active' : ''}" 
                                         onclick="filterExperts(null)">
-                                    All (${[...new Set(currentExpertTypeMatches.map(m => m.expert_id))].length})
+                                    All (${allCandidates.length})
                                 </button>
-                                ${expertTypes.map(type => {
-                                    const count = currentExpertTypeMatches.filter(m => m.expert_type === type.expert_title).length;
+                                ${currentExpertTypes.map(type => {
+                                    const count = allCandidates.filter(c => 
+                                        c.raw_scores?.some(s => s.expert_type === type.expert_title) || 
+                                        c.expert_type === type.expert_title
+                                    ).length;
                                     return `
                                         <button class="filter-pill ${selectedExpertType === type.expert_title ? 'active' : ''}"
                                                 onclick="filterExperts('${type.expert_title}')">
